@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rejsebudget – Jakob & Frida</title>
+<style>
+  :root{
+    --bg:#0f1720; --card:#18232f; --card2:#1e2b39; --line:#2a3947; --ink:#e8eef4;
+    --muted:#9fb0c0; --accent:#2f81f7; --good:#3fb950; --warn:#d29922; --bad:#f85149;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);padding:16px;max-width:640px;margin:0 auto;padding-bottom:40px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .who{display:flex;gap:8px;margin-bottom:12px}
+  .who button{flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:15px;font-weight:600;cursor:pointer}
+  .who button.active{background:var(--accent);border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+  input,select{width:100%;padding:11px;border-radius:9px;border:1px solid var(--line);
+    background:#0f1720;color:var(--ink);font-size:16px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;color:#fff}
+  .btn.good{background:var(--good)} .btn.accent{background:var(--accent)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn:active{opacity:.85} .btn:disabled{opacity:.5}
+  .kasse{padding:9px 0;border-bottom:1px solid var(--line)}
+  .kasse:last-child{border-bottom:none}
+  .kasse .top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+  .kasse .amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
+  .bar{height:6px;background:#0f1720;border-radius:3px;margin-top:5px;overflow:hidden}
+  .bar>span{display:block;height:100%;background:var(--good);transition:width .3s}
+  .bar.warn>span{background:var(--warn)} .bar.over>span{background:var(--bad)}
+  .sekhd{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.5px;margin:14px 0 4px} .sekhd:first-child{margin-top:0}
+  .tot{display:flex;justify-content:space-between;font-weight:700;font-size:16px;
+    padding-top:12px;margin-top:8px;border-top:2px solid var(--line)}
+  .hd{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:0 0 10px;
+    display:flex;justify-content:space-between;align-items:center}
+  .refresh{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-size:12px;padding:4px 10px;cursor:pointer}
+  .logrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+    border-bottom:1px solid var(--line);font-size:14px;gap:8px}
+  .logrow:last-child{border-bottom:none}
+  .logrow .d{color:var(--muted);font-size:11px;margin-top:2px}
+  .logrow .main{flex:1;min-width:0;cursor:pointer}
+  .logrow .main .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .logrow .amt{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .del{background:none;border:none;color:var(--bad);font-size:22px;padding:0 6px;cursor:pointer;line-height:1}
+  .status{font-size:12px;text-align:center;padding:7px;border-radius:8px;margin-bottom:10px;display:none}
+  .status.show{display:block}
+  .status.ok{background:rgba(63,185,80,.12);color:var(--good)}
+  .status.err{background:rgba(248,81,73,.14);color:var(--bad)}
+  .status.sync{background:rgba(47,129,247,.12);color:var(--accent)}
+  .muted{color:var(--muted)}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tabs button{flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer}
+  .tabs button.active{color:var(--ink);border-color:var(--accent)}
+  .skel{height:14px;background:linear-gradient(90deg,#1e2b39,#243343,#1e2b39);
+    background-size:200% 100%;animation:sh 1.2s infinite;border-radius:4px;margin:10px 0}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .modal.show{display:flex}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;
+    padding:18px;width:100%;max-width:640px;animation:up .2s}
+  @keyframes up{from{transform:translateY(30px)}to{transform:translateY(0)}}
+  .err-field{border-color:var(--bad)!important}
+  .totals-grid{display:flex;gap:8px;margin-top:4px}
+  .totbox{flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center}
+  .totbox .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+  .totbox .l{font-size:11px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+<h1>Rejsebudget</h1>
+<div class="sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
+<div id="status" class="status"></div>
+<div class="who">
+  <button id="w-jakob" class="active" onclick="setWho('Jakob')">Jakob</button>
+  <button id="w-frida" onclick="setWho('Frida')">Frida</button>
+</div>
+<div class="tabs">
+  <button id="t-add" class="active" onclick="setTab('add')">Tilføj</button>
+  <button id="t-kasser" onclick="setTab('kasser')">Kasser</button>
+  <button id="t-log" onclick="setTab('log')">Log</button>
+  <button id="t-mere" onclick="setTab('mere')">Mere</button>
+</div>
+<div id="tab-add" class="card">
+  <div class="hd">Ny udgift for <span id="who-label">Jakob</span></div>
+  <label>Beskrivelse <span class="muted">(valgfri)</span></label>
+  <input id="f-besk" placeholder="fx Ramen i Shinjuku" maxlength="120">
+  <div class="row">
+    <div><label>Beløb</label><input id="f-belob" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></div>
+    <div><label>Valuta</label><select id="f-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+  </div>
+  <label>Kategori</label>
+  <select id="f-kode"></select>
+  <div id="f-preview" class="sub" style="margin:8px 0 0"></div>
+  <button class="btn good" style="margin-top:12px" onclick="addExpense()" id="add-btn">Tilføj udgift</button>
+</div>
+<div id="tab-kasser" class="card" style="display:none">
+  <div class="hd"><span>Kasser for <span id="who-label2">Jakob</span></span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+  <div id="kasser"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+</div>
+<div id="tab-log" class="card" style="display:none">
+  <div class="hd"><span>Udgifter · tryk for at rette</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+  <div id="log"><div class="skel"></div><div class="skel"></div></div>
+</div>
+<div id="tab-mere" style="display:none">
+  <div class="card">
+    <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+    <div class="totals-grid">
+      <div class="totbox"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
+      <div class="totbox"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
+      <div class="totbox"><div class="v" id="ov-par">–</div><div class="l">Jer to</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="hd">Valutakurser</div>
+    <div class="sub">Bruges på nye udgifter. Tidligere udgifter beholder den kurs, de blev tastet med.</div>
+    <div class="row">
+      <div><label>1 JPY = kr</label><input id="s-jpy" type="number" step="any" min="0"></div>
+      <div><label>1 AUD = kr</label><input id="s-aud" type="number" step="any" min="0"></div>
+    </div>
+    <button class="btn accent" style="margin-top:12px" onclick="saveRates()">Gem kurser</button>
+  </div>
+  <div class="card">
+    <div class="hd">Eksportér</div>
+    <div class="sub">Kopiér alle udgifter som CSV, du kan indsætte i Excel-arkets Forbrugslog-fane.</div>
+    <button class="btn ghost" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
+  </div>
+</div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="hd">Ret udgift</div>
+    <label>Beskrivelse</label>
+    <input id="e-besk" maxlength="120">
+    <div class="row">
+      <div><label>Beløb</label><input id="e-belob" type="number" step="any" min="0"></div>
+      <div><label>Valuta</label><select id="e-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+    </div>
+    <label>Kategori</label>
+    <select id="e-kode"></select>
+    <label>Person</label>
+    <select id="e-hvem"><option>Jakob</option><option>Frida</option></select>
+    <button class="btn accent" style="margin-top:14px" onclick="saveEdit()">Gem ændringer</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="closeModal()">Annullér</button>
+  </div>
+</div>
+<script>
+const SUPABASE_URL="https://wtymsksnkkkfowfbocct.supabase.co";
+const SUPABASE_KEY="sb_publishable_IJWZ1O45f70f8pZcWnzjzg_YvEIKBH1";
+const REST=SUPABASE_URL+"/rest/v1";
+const BASE_HEADERS={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+// Almindelige fetch-kald mod PostgREST — plain object-headers, ingen SDK (undgår sandkasse-fejl)
+async function api(path,opts){
+  opts=opts||{};
+  const headers=Object.assign({},BASE_HEADERS,opts.headers||{});
+  const res=await fetch(REST+path,{method:opts.method||"GET",headers,body:opts.body});
+  if(!res.ok){
+    let msg=res.status+" "+res.statusText;
+    try{const j=await res.json();msg=j.message||j.hint||j.details||msg;}catch(e){}
+    throw new Error(msg);
+  }
+  if(res.status===204)return null;
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
+let who="Jakob",tab="add";
+let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40};
+let editingId=null,loaded=false,pollTimer=null;
+const $=id=>document.getElementById(id);
+const kr=n=>Math.round(n).toLocaleString("da-DK")+" kr";
+const krD=n=>Number(n).toLocaleString("da-DK",{minimumFractionDigits:2,maximumFractionDigits:2})+" kr";
+function setStatus(msg,cls,sticky){const el=$("status");el.textContent=msg;el.className="status show "+cls;
+  if(cls==="ok"&&!sticky)setTimeout(()=>el.classList.remove("show"),1400);}
+function catsForWho(w){return cats.filter(c=>Number(w==="Jakob"?c.budget_jakob:c.budget_frida)>0).sort((a,b)=>a.sort_order-b.sort_order);}
+function budgetOf(c,w){return Number(w==="Jakob"?c.budget_jakob:c.budget_frida);}
+function label(kode){const c=cats.find(x=>x.kode===kode);return c?c.label:kode;}
+function fillKodeDropdown(){$("f-kode").innerHTML=catsForWho(who).map(c=>'<option value="'+c.kode+'">'+c.label+'</option>').join("");updatePreview();}
+function updatePreview(){const b=parseFloat($("f-belob").value),v=$("f-valuta").value;
+  $("f-preview").textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";}
+function setWho(w){who=w;$("w-jakob").classList.toggle("active",w==="Jakob");$("w-frida").classList.toggle("active",w==="Frida");
+  ["who-label","who-label2","who-label3"].forEach(id=>{if($(id))$(id).textContent=w;});fillKodeDropdown();render();}
+function setTab(t){tab=t;["add","kasser","log","mere"].forEach(x=>{$("tab-"+x).style.display=x===t?"block":"none";
+  $("t-"+x).classList.toggle("active",x===t);});render();
+  if(loaded&&t!=="add")loadAll(true);}
+async function loadAll(silent){
+  if(!navigator.onLine){setStatus("Ingen forbindelse – prøver igen når du er online","err",true);return;}
+  if(!silent)setStatus("Henter data…","sync",true);
+  try{
+    const [c,s,e]=await Promise.all([
+      api("/categories?select=*"),
+      api("/settings?select=*"),
+      api("/expenses?select=*&order=created_at.desc")]);
+    cats=c||[];
+    (s||[]).forEach(x=>{if(x.key==="rate_JPY")rates.JPY=Number(x.value);if(x.key==="rate_AUD")rates.AUD=Number(x.value);});
+    rows=e||[];loaded=true;
+    $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
+    fillKodeDropdown();
+    if(!silent)setStatus("Forbundet ✓","ok");
+    render();
+  }catch(err){setStatus("Kunne ikke hente data: "+(err.message||err),"err",true);}
+}
+async function addExpense(){
+  const belob=parseFloat($("f-belob").value),val=$("f-valuta").value,kode=$("f-kode").value;
+  $("f-belob").classList.remove("err-field");
+  if(!(belob>0)){$("f-belob").classList.add("err-field");setStatus("Skriv et beløb større end 0","err");return;}
+  if(!kode){setStatus("Vælg en kategori","err");return;}
+  const rec={dato:new Date().toISOString().slice(0,10),beskrivelse:$("f-besk").value.trim()||null,
+    kode:kode,belob:belob,valuta:val,rate_used:rates[val],hvem:who};
+  $("add-btn").disabled=true;setStatus("Gemmer…","sync",true);
+  try{
+    const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
+    rows.unshift(data[0]);$("f-besk").value="";$("f-belob").value="";updatePreview();
+    setStatus("Gemt ✓","ok");render();
+  }catch(err){setStatus("Fejl ved gem: "+(err.message||err),"err",true);}
+  finally{$("add-btn").disabled=false;}
+}
+function openEdit(id){const r=rows.find(x=>x.id===id);if(!r)return;editingId=id;
+  $("e-besk").value=r.beskrivelse||"";$("e-belob").value=r.belob;$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
+  $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order).map(c=>'<option value="'+c.kode+'">'+c.label+'</option>').join("");
+  $("e-kode").value=r.kode;$("modal").classList.add("show");}
+function closeModal(){$("modal").classList.remove("show");editingId=null;}
+async function saveEdit(){
+  const belob=parseFloat($("e-belob").value);
+  if(!(belob>0)){setStatus("Beløb skal være større end 0","err");return;}
+  const val=$("e-valuta").value;
+  const patch={beskrivelse:$("e-besk").value.trim()||null,belob:belob,valuta:val,rate_used:rates[val],kode:$("e-kode").value,hvem:$("e-hvem").value};
+  setStatus("Gemmer…","sync",true);
+  try{
+    const data=await api("/expenses?id=eq."+editingId,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+    const i=rows.findIndex(x=>x.id===editingId);if(i>=0)rows[i]=data[0];
+    closeModal();setStatus("Rettet ✓","ok");render();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+async function delExpense(id,ev){
+  if(ev)ev.stopPropagation();
+  if(!confirm("Slet denne udgift?"))return;
+  setStatus("Sletter…","sync",true);
+  try{
+    await api("/expenses?id=eq."+id,{method:"DELETE"});
+    rows=rows.filter(r=>r.id!==id);setStatus("Slettet ✓","ok");render();
+  }catch(err){setStatus("Kunne ikke slette: "+(err.message||err),"err",true);}
+}
+async function saveRates(){
+  const jpy=parseFloat($("s-jpy").value),aud=parseFloat($("s-aud").value);
+  if(!(jpy>0)||!(aud>0)){setStatus("Kurser skal være større end 0","err");return;}
+  setStatus("Gemmer kurser…","sync",true);
+  try{
+    await api("/settings?key=eq.rate_JPY",{method:"PATCH",body:JSON.stringify({value:jpy,updated_at:new Date().toISOString()})});
+    await api("/settings?key=eq.rate_AUD",{method:"PATCH",body:JSON.stringify({value:aud,updated_at:new Date().toISOString()})});
+    rates.JPY=jpy;rates.AUD=aud;setStatus("Kurser gemt ✓","ok");updatePreview();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+function spentByKode(w){const m={};rows.filter(r=>r.hvem===w).forEach(r=>{m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
+function render(){
+  if(!loaded)return;
+  if(tab==="kasser"){
+    const list=catsForWho(who),spent=spentByKode(who);
+    let totB=0,totS=0,html="",lastSek="";
+    list.forEach(c=>{
+      const bud=budgetOf(c,who),sp=spent[c.kode]||0,pct=bud?Math.min(sp/bud*100,100):0;
+      const cls=sp>bud?"over":(sp>bud*0.85?"warn":"");totB+=bud;totS+=sp;
+      if(c.sektion!==lastSek){html+='<div class="sekhd">'+c.sektion+'</div>';lastSek=c.sektion;}
+      html+='<div class="kasse"><div class="top"><div>'+c.label+'</div><div class="amt">'+kr(sp)+' <span class="muted">/ '+kr(bud)+'</span></div></div><div class="bar '+cls+'"><span style="width:'+pct+'%"></span></div></div>';
+    });
+    html+='<div class="tot"><span>Rejse + shopping i alt</span><span>'+kr(totS)+' / '+kr(totB)+'</span></div>';
+    $("kasser").innerHTML=html;
+  }
+  if(tab==="log"){
+    const mine=rows.filter(r=>r.hvem===who);
+    if(!mine.length){$("log").innerHTML='<div class="muted">Ingen udgifter endnu.</div>';return;}
+    $("log").innerHTML=mine.map(r=>{
+      const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
+      const t=(r.beskrivelse||label(r.kode)).replace(/</g,"&lt;");
+      return '<div class="logrow"><div class="main" onclick="openEdit(\''+r.id+'\')"><div class="t">'+t+'</div><div class="d">'+(r.dato||"")+' · '+label(r.kode)+orig+'</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div><button class="del" onclick="delExpense(\''+r.id+'\',event)">×</button></div>';
+    }).join("");
+  }
+  if(tab==="mere"){
+    const sj=Object.values(spentByKode("Jakob")).reduce((a,b)=>a+b,0);
+    const sf=Object.values(spentByKode("Frida")).reduce((a,b)=>a+b,0);
+    $("ov-jakob").textContent=kr(sj);$("ov-frida").textContent=kr(sf);$("ov-par").textContent=kr(sj+sf);
+  }
+}
+function exportCSV(){
+  const head="Dato;Beskrivelse;Kode;Beløb;Valuta;DKK;Hvem";
+  const lines=rows.slice().reverse().map(r=>[r.dato,(r.beskrivelse||"").replace(/;/g,","),r.kode,r.belob,r.valuta,r.belob_dkk,r.hvem].join(";"));
+  const csv=[head].concat(lines).join("\n");
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(()=>setStatus("Kopieret ✓ – indsæt i Excel","ok"),()=>prompt("Kopiér manuelt:",csv));
+  }else prompt("Kopiér manuelt:",csv);
+}
+$("f-belob").addEventListener("input",updatePreview);
+$("f-valuta").addEventListener("change",updatePreview);
+window.addEventListener("online",()=>{setStatus("Online igen – opdaterer…","sync",true);loadAll();});
+window.addEventListener("offline",()=>setStatus("Offline – ændringer venter til du er online","err",true));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&loaded)loadAll(true);});
+// let poll så Frida og Jakob ser hinandens ændringer
+pollTimer=setInterval(()=>{if(loaded&&!document.hidden&&!$("modal").classList.contains("show"))loadAll(true);},45000);
+loadAll();
+</script>
+</body>
+</html>
