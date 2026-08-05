@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rejsebudget – Jakob & Frida</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rejsebudget">
+<style>
+  :root{
+    --bg:#ffffff; --card:#ffffff; --card2:#eaf2fb; --line:#d7e3ee; --ink:#152a3d;
+    --muted:#64798c; --accent:#2563eb; --accent2:#4f8ff7; --good:#16a34a; --good2:#34c766;
+    --warn:#d97706; --bad:#dc2626;
+    --ease-out-quint: cubic-bezier(.23,1,.32,1);
+    --ease-out-cubic: cubic-bezier(.33,1,.68,1);
+    --ease-in-cubic: cubic-bezier(.55,.06,.68,.19);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);padding:16px;max-width:640px;margin:0 auto;padding-bottom:40px;overflow-x:hidden}
+  h1{font-size:20px;margin:0 0 2px;letter-spacing:.2px;font-family:"Times New Roman",Times,serif}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:8px}
+  .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    font-size:12px;padding:5px 10px;border-radius:999px;margin-bottom:12px}
+  /* --- Startskærm --- */
+  #splash{position:fixed;inset:0;background:linear-gradient(160deg,#ffffff,#eaf2fb 55%,#eafaf1);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:24px;
+    transition:opacity 380ms var(--ease-out-cubic),transform 380ms var(--ease-out-cubic)}
+  #splash.leaving{opacity:0;transform:scale(1.03);pointer-events:none}
+  .splash-inner{text-align:center;max-width:420px}
+  .splash-title{font-family:"Times New Roman",Times,serif;font-size:46px;margin:0 0 10px;
+    color:var(--ink);letter-spacing:.3px}
+  .splash-sub{color:var(--muted);font-size:14px;margin-bottom:34px}
+  .splash-btn{width:auto;padding:14px 30px;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:999px;font-size:16px;box-shadow:0 10px 24px rgba(37,99,235,.25)}
+  #app{display:none}
+  /* --- Segmenterede kontroller (who / tabs / seg) --- */
+  .who{position:relative;display:flex;gap:0;padding:4px;background:var(--card2);border:1px solid var(--line);
+    border-radius:12px;margin-bottom:12px}
+  .who button{position:relative;z-index:1;flex:1;padding:12px;border:none;background:transparent;
+    color:var(--muted);font-size:15px;font-weight:600;cursor:pointer;border-radius:9px;
+    transition:color 200ms var(--ease-out-cubic),transform 100ms var(--ease-out-cubic)}
+  .who button.active{color:#fff}
+  .who button:active,.tabs button:active,.seg button:active,.btn:active,.refresh:active{transform:scale(.97)}
+  .ind{position:absolute;top:4px;bottom:4px;left:4px;border-radius:9px;z-index:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 2px 10px rgba(37,99,235,.3);
+    transition:transform 320ms var(--ease-spring),width 320ms var(--ease-spring)}
+  .seg .ind{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 2px 8px rgba(37,99,235,.25)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 6px 16px rgba(21,42,61,.06)}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+  input,select{width:100%;padding:11px;border-radius:9px;border:1px solid var(--line);
+    background:#fbfdff;color:var(--ink);font-size:16px;font-family:inherit;transition:border-color 150ms var(--ease-out-cubic)}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;color:#fff;
+    transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic)}
+  .btn.good{background:linear-gradient(135deg,var(--good),var(--good2))}
+  .btn.accent{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn:active{opacity:.85} .btn:disabled{opacity:.5}
+  /* Knap der morfer til en grøn cirkel med hak, når en udgift er gemt */
+  .btn.morph-btn{position:relative;overflow:hidden;height:48px;margin:0 auto;padding:0;
+    transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic),
+               width 380ms var(--ease-spring),border-radius 380ms var(--ease-spring)}
+  .btn.morph-btn .btn-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:600;color:#fff;white-space:nowrap;pointer-events:none;
+    transition:opacity 160ms var(--ease-out-cubic),transform 160ms var(--ease-out-cubic)}
+  .btn.morph-btn .btn-check{position:absolute;inset:0;margin:auto;width:22px;height:22px;pointer-events:none;
+    opacity:0;transform:scale(.4) rotate(-20deg);
+    transition:opacity 200ms var(--ease-out-cubic) 160ms,transform 260ms var(--ease-spring) 160ms}
+  .btn.morph-btn.success{width:48px;border-radius:50%}
+  .btn.morph-btn.success .btn-label{opacity:0;transform:scale(.7)}
+  .btn.morph-btn.success .btn-check{opacity:1;transform:scale(1) rotate(0deg)}
+  .btn.morph-btn.success:disabled{opacity:1}
+  .btn-check-mark{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset 300ms var(--ease-out-cubic) 260ms}
+  .btn.morph-btn.success .btn-check-mark{stroke-dashoffset:0}
+  .kasse{padding:9px 0;border-bottom:1px solid var(--line)}
+  .kasse:last-child{border-bottom:none}
+  .kasse .top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+  .kasse .amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
+  .bar{height:6px;background:#e7eef5;border-radius:3px;margin-top:5px;overflow:hidden}
+  .bar>span{display:block;height:100%;background:var(--good);transition:width 420ms var(--ease-spring)}
+  .bar.warn>span{background:var(--warn)} .bar.over>span{background:var(--bad)}
+  .sekhd{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;
+    letter-spacing:.5px;margin:14px 0 4px} .sekhd:first-child{margin-top:0}
+  .tot{display:flex;justify-content:space-between;font-weight:700;font-size:16px;
+    padding-top:12px;margin-top:8px;border-top:2px solid var(--line)}
+  .hd{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:0 0 10px;
+    display:flex;justify-content:space-between;align-items:center}
+  .refresh{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-size:12px;padding:4px 10px;cursor:pointer;transition:transform 100ms var(--ease-out-cubic)}
+  .seg{position:relative;display:flex;gap:0;padding:3px;background:var(--card2);border:1px solid var(--line);
+    border-radius:10px;margin-bottom:10px}
+  .seg button{position:relative;z-index:1;flex:1;padding:7px 4px;border:none;background:transparent;
+    color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;border-radius:7px;
+    transition:color 200ms var(--ease-out-cubic),transform 100ms var(--ease-out-cubic)}
+  .seg button.active{color:#fff}
+  .tabs{position:relative;display:flex;gap:0;padding:4px;background:var(--card2);border:1px solid var(--line);
+    border-radius:11px;margin-bottom:12px}
+  .tabs button{position:relative;z-index:1;flex:1;padding:9px 4px;border:none;background:transparent;
+    color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;
+    transition:color 200ms var(--ease-out-cubic),transform 100ms var(--ease-out-cubic)}
+  .tabs button.active{color:#fff}
+  .logrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+    border-bottom:1px solid var(--line);font-size:14px;gap:8px;touch-action:pan-y;will-change:transform}
+  .logrow:last-child{border-bottom:none}
+  .logrow .d{color:var(--muted);font-size:11px;margin-top:2px}
+  .logrow .main{flex:1;min-width:0;cursor:pointer}
+  .logrow .main .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .logrow .amt{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .del{background:none;border:none;color:var(--bad);font-size:22px;padding:0 6px;cursor:pointer;line-height:1;
+    transition:transform 100ms var(--ease-out-cubic)}
+  .del:active{transform:scale(.85)}
+  .row-in{animation:rowIn 340ms var(--ease-out-quint) both}
+  @keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .status{font-size:12px;text-align:center;padding:7px;border-radius:8px;margin-bottom:10px;
+    max-height:0;overflow:hidden;opacity:0;transition:max-height 200ms var(--ease-out-quint),opacity 200ms var(--ease-out-quint),margin-bottom 200ms var(--ease-out-quint)}
+  .status.show{display:block;max-height:60px;opacity:1;margin-bottom:10px}
+  .status.ok{background:rgba(22,163,74,.1);color:var(--good)}
+  .status.err{background:rgba(220,38,38,.1);color:var(--bad)}
+  .status.sync{background:rgba(37,99,235,.1);color:var(--accent)}
+  .muted{color:var(--muted)}
+  .skel{height:14px;background:linear-gradient(90deg,#eef2f6,#e2e9f0,#eef2f6);
+    background-size:200% 100%;animation:sh 1.2s infinite;border-radius:4px;margin:10px 0}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .pane{animation:paneIn 220ms var(--ease-out-quint)}
+  @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .modal{position:fixed;inset:0;background-color:rgba(15,25,35,0);visibility:hidden;opacity:0;
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+    transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 200ms}
+  .modal.show{visibility:visible;opacity:1;background-color:rgba(15,25,35,.45);
+    transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 0s}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;
+    padding:18px;width:100%;max-width:640px;box-shadow:0 -8px 30px rgba(21,42,61,.12)}
+  .sheet.anim{animation:up 220ms var(--ease-spring)}
+  @keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
+  .err-field{border-color:var(--bad)!important}
+  .totals-grid{display:flex;gap:8px;margin-top:4px}
+  .totbox{flex:1;background:var(--card2);border-radius:10px;padding:10px;text-align:center}
+  .totbox .v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .totbox .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .toasts{position:fixed;left:0;right:0;bottom:14px;display:flex;flex-direction:column;align-items:center;
+    gap:8px;z-index:60;pointer-events:none;padding:0 16px}
+  .toast{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;display:flex;align-items:center;gap:10px;max-width:520px;width:100%;
+    box-shadow:0 12px 28px rgba(21,42,61,.18);animation:toastIn 220ms var(--ease-out-quint);
+    overflow:hidden;position:relative;color:var(--ink)}
+  .toast.out{animation:toastOut 160ms var(--ease-in-cubic) forwards}
+  .toast .txt{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toast button{background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;
+    cursor:pointer;padding:4px 6px}
+  .toast .bar2{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);animation:shrink linear forwards}
+  @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(8px) scale(.98)}}
+  @keyframes shrink{from{width:100%}to{width:0%}}
+  .confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:70;
+    animation:confettiFly 650ms ease-out forwards}
+  @keyframes confettiFly{
+    0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(260deg) scale(.4)}
+  }
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-inner">
+    <h1 class="splash-title">Rejsebudget</h1>
+    <div class="splash-sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
+    <button class="btn accent splash-btn" id="splash-btn" onclick="enterApp()">
+      <span>Kom i gang</span>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="margin-left:8px;vertical-align:-3px">
+        <path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div id="app">
+<h1>Rejsebudget</h1>
+<div class="sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
+<div id="countdown" class="pill"></div>
+<div id="status" class="status"></div>
+<div class="who" id="whobar">
+  <div class="ind"></div>
+  <button id="w-jakob" class="active" onclick="setWho('Jakob')">Jakob</button>
+  <button id="w-frida" onclick="setWho('Frida')">Frida</button>
+</div>
+<div class="tabs" id="tabsbar">
+  <div class="ind"></div>
+  <button id="t-add" class="active" onclick="setTab('add')">Tilføj</button>
+  <button id="t-kasser" onclick="setTab('kasser')">Kasser</button>
+  <button id="t-log" onclick="setTab('log')">Log</button>
+  <button id="t-mere" onclick="setTab('mere')">Mere</button>
+</div>
+<div id="tab-add" class="card pane">
+  <div class="hd">Ny udgift for <span id="who-label">Jakob</span></div>
+  <label>Beskrivelse <span class="muted">(valgfri)</span></label>
+  <input id="f-besk" placeholder="fx Ramen i Shinjuku" maxlength="120">
+  <div class="row">
+    <div><label>Beløb</label><input id="f-belob" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></div>
+    <div><label>Valuta</label><select id="f-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+  </div>
+  <label>Kategori</label>
+  <select id="f-kode"></select>
+  <div id="f-preview" class="sub" style="margin:8px 0 0"></div>
+  <button class="btn good morph-btn" style="margin-top:12px" onclick="addExpense()" id="add-btn">
+    <span class="btn-label">Tilføj udgift</span>
+    <svg class="btn-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="btn-check-mark" d="M4 12.5l5.5 5.5L20 6.5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>
+<div id="tab-kasser" class="card" style="display:none">
+  <div class="hd"><span>Kasser for <span id="who-label2">Jakob</span></span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+  <div class="seg" id="kasser-seg">
+    <div class="ind"></div>
+    <button data-v="Jakob" class="active" onclick="setKasserView('Jakob')">Jakob</button>
+    <button data-v="Frida" onclick="setKasserView('Frida')">Frida</button>
+    <button data-v="Begge" onclick="setKasserView('Begge')">Begge</button>
+  </div>
+  <div id="kasser"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+</div>
+<div id="tab-log" class="card" style="display:none">
+  <div class="hd"><span>Udgifter · tryk for at rette, swipe for at slette</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+  <input id="log-search" placeholder="Søg i beskrivelse eller kategori…" style="margin-bottom:10px">
+  <div id="log"><div class="skel"></div><div class="skel"></div></div>
+</div>
+<div id="tab-mere" style="display:none">
+  <div class="card">
+    <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+    <div class="totals-grid">
+      <div class="totbox"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
+      <div class="totbox"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
+      <div class="totbox"><div class="v" id="ov-par">–</div><div class="l">Jer to</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="hd">Rejsedatoer</div>
+    <div class="sub">Bruges kun til nedtællingen øverst. Gemmes lokalt på denne enhed (ikke delt med den anden af jer).</div>
+    <div class="row">
+      <div><label>Afrejse</label><input id="s-afrejse" type="date"></div>
+      <div><label>Hjemme</label><input id="s-hjem" type="date"></div>
+    </div>
+    <button class="btn accent" style="margin-top:12px" onclick="saveTripDatesFromInputs()">Gem datoer</button>
+  </div>
+  <div class="card">
+    <div class="hd">Valutakurser</div>
+    <div class="sub">Bruges på nye udgifter. Tidligere udgifter beholder den kurs, de blev tastet med.</div>
+    <div class="row">
+      <div><label>1 JPY = kr</label><input id="s-jpy" type="number" step="any" min="0"></div>
+      <div><label>1 AUD = kr</label><input id="s-aud" type="number" step="any" min="0"></div>
+    </div>
+    <button class="btn ghost" style="margin-top:10px" onclick="fetchLiveRates()">Hent dagens kurser</button>
+    <button class="btn accent" style="margin-top:8px" onclick="saveRates()">Gem kurser</button>
+  </div>
+  <div class="card">
+    <div class="hd">Eksportér</div>
+    <div class="sub">Kopiér alle udgifter som CSV, du kan indsætte i Excel-arkets Forbrugslog-fane.</div>
+    <button class="btn ghost" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
+  </div>
+</div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="hd">Ret udgift</div>
+    <label>Beskrivelse</label>
+    <input id="e-besk" maxlength="120">
+    <div class="row">
+      <div><label>Beløb</label><input id="e-belob" type="number" step="any" min="0"></div>
+      <div><label>Valuta</label><select id="e-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+    </div>
+    <label>Kategori</label>
+    <select id="e-kode"></select>
+    <label>Person</label>
+    <select id="e-hvem"><option>Jakob</option><option>Frida</option></select>
+    <button class="btn accent" style="margin-top:14px" onclick="saveEdit()">Gem ændringer</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="closeModal()">Annullér</button>
+  </div>
+</div>
+<div id="toasts" class="toasts"></div>
+</div>
+
+<script>
+const SUPABASE_URL="https://wtymsksnkkkfowfbocct.supabase.co";
+const SUPABASE_KEY="sb_publishable_IJWZ1O45f70f8pZcWnzjzg_YvEIKBH1";
+const REST=SUPABASE_URL+"/rest/v1";
+const BASE_HEADERS={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+// Almindelige fetch-kald mod PostgREST — plain object-headers, ingen SDK (undgår sandkasse-fejl)
+async function api(path,opts){
+  opts=opts||{};
+  const headers=Object.assign({},BASE_HEADERS,opts.headers||{});
+  const res=await fetch(REST+path,{method:opts.method||"GET",headers,body:opts.body});
+  if(!res.ok){
+    let msg=res.status+" "+res.statusText;
+    try{const j=await res.json();msg=j.message||j.hint||j.details||msg;}catch(e){}
+    throw new Error(msg);
+  }
+  if(res.status===204)return null;
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
+function reducedMotion(){return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;}
+const ICONS={"Hotel JP":"🏨","Mad JP":"🍜","Splurge JP":"🍶","Shinkansen":"🚄","Metro JP":"🚇","Aktiviteter JP":"⛩️",
+  "Bil":"🚙","Braendstof":"⛽","Parkering":"🅿️","Airbnb":"🏡","Hotel AU":"🏨","Mad camper":"🍳","Mad by AU":"🍽️",
+  "Fly AU":"✈️","Rev":"🤿","Aktiviteter AU":"🎡","Transport AU":"🚌","Objektiv":"📷","Toj":"👕","Shopping":"🛍️"};
+function icon(kode){return ICONS[kode]||"💰";}
+const CACHE_KEY="rejsebudget_cache_v2";
+const TRIP_KEY="rejsebudget_trip_dates";
+const PENDING_KEY="rejsebudget_pending_queue";
+let who="Jakob",tab="add",kasserView="Jakob",searchQuery="",justEnteredTab=true,justSwiped=false;
+let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40};
+let editingId=null,loaded=false,pollTimer=null;
+let pendingDeletes=new Set(),toastTimers={};
+const $=id=>document.getElementById(id);
+const kr=n=>Math.round(n).toLocaleString("da-DK")+" kr";
+const krD=n=>Number(n).toLocaleString("da-DK",{minimumFractionDigits:2,maximumFractionDigits:2})+" kr";
+function setStatus(msg,cls,sticky){const el=$("status");el.textContent=msg;el.className="status show "+cls;
+  if(cls==="ok"&&!sticky)setTimeout(()=>el.classList.remove("show"),1400);}
+function catsForWho(w){return cats.filter(c=>Number(w==="Jakob"?c.budget_jakob:c.budget_frida)>0).sort((a,b)=>a.sort_order-b.sort_order);}
+function budgetOf(c,w){return Number(w==="Jakob"?c.budget_jakob:c.budget_frida);}
+function catsForView(v){
+  if(v==="Begge")return cats.filter(c=>Number(c.budget_jakob)>0||Number(c.budget_frida)>0).sort((a,b)=>a.sort_order-b.sort_order);
+  return catsForWho(v);
+}
+function budgetOfView(c,v){return v==="Begge"?Number(c.budget_jakob)+Number(c.budget_frida):budgetOf(c,v);}
+function label(kode){const c=cats.find(x=>x.kode===kode);return c?c.label:kode;}
+function fillKodeDropdown(){$("f-kode").innerHTML=catsForWho(who).map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");updatePreview();}
+function updatePreview(){const b=parseFloat($("f-belob").value),v=$("f-valuta").value;
+  $("f-preview").textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";}
+
+// --- Startskærm ---
+function enterApp(){
+  const splash=$("splash");
+  splash.classList.add("leaving");
+  setTimeout(()=>{
+    splash.style.display="none";
+    const app=$("app");
+    app.style.display="block";
+    app.classList.remove("pane");void app.offsetWidth;app.classList.add("pane");
+    initIndicator($("whobar"),$("w-jakob"));
+    initIndicator($("tabsbar"),$("t-add"));
+    initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="Jakob"]'));
+  },reducedMotion()?0:380);
+}
+
+// --- Glidende "pille"-indikator bag de aktive knapper (tabs / who / seg) ---
+function initIndicator(container,activeBtn){
+  const ind=container.querySelector(".ind");if(!ind||!activeBtn)return;
+  ind.style.transition="none";
+  ind.style.width=activeBtn.offsetWidth+"px";
+  ind.style.transform="translateX("+activeBtn.offsetLeft+"px)";
+  void ind.offsetWidth;
+  ind.style.transition="";
+}
+function moveIndicator(container,activeBtn){
+  const ind=container.querySelector(".ind");if(!ind||!activeBtn)return;
+  ind.style.width=activeBtn.offsetWidth+"px";
+  ind.style.transform="translateX("+activeBtn.offsetLeft+"px)";
+}
+
+function setWho(w){who=w;$("w-jakob").classList.toggle("active",w==="Jakob");$("w-frida").classList.toggle("active",w==="Frida");
+  $("who-label").textContent=w;
+  moveIndicator($("whobar"), w==="Jakob"?$("w-jakob"):$("w-frida"));
+  if(kasserView!=="Begge"){kasserView=w;syncKasserSegUI();}
+  fillKodeDropdown();render();}
+function setKasserView(v){kasserView=v;syncKasserSegUI();render();}
+function syncKasserSegUI(){
+  const activeBtn=document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]');
+  document.querySelectorAll("#kasser-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===kasserView));
+  const lbl=$("who-label2");if(lbl)lbl.textContent=kasserView;
+  if(activeBtn)moveIndicator($("kasser-seg"),activeBtn);
+}
+function setTab(t){tab=t;justEnteredTab=true;
+  ["add","kasser","log","mere"].forEach(x=>{
+    const el=$("tab-"+x);
+    if(x===t){el.style.display="block";el.classList.remove("pane");void el.offsetWidth;el.classList.add("pane");}
+    else{el.style.display="none";}
+    $("t-"+x).classList.toggle("active",x===t);
+  });
+  moveIndicator($("tabsbar"),$("t-"+t));
+  render();}
+// Faneskift udløser IKKE netværkskald — data kommer fra opstart, "Opdatér"-knapper, baggrundspolling og cache.
+
+function loadCacheFromStorage(){
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw)return false;
+    const c=JSON.parse(raw);
+    if(!c||!Array.isArray(c.cats)||!Array.isArray(c.rows))return false;
+    cats=c.cats;rows=c.rows;if(c.rates)rates=Object.assign(rates,c.rates);
+    loaded=true;
+    $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
+    fillKodeDropdown();render();
+    return true;
+  }catch(e){return false;}
+}
+function saveCacheToStorage(){
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify({cats:cats,rows:rows,rates:rates,savedAt:Date.now()}));}catch(e){}
+}
+// --- Offline-kø: udgifter tastet uden forbindelse gemmes lokalt og sendes,
+// så snart telefonen er online igen. ---
+function loadPendingQueue(){
+  try{const q=JSON.parse(localStorage.getItem(PENDING_KEY));return Array.isArray(q)?q:[];}catch(e){return [];}
+}
+function savePendingQueue(q){try{localStorage.setItem(PENDING_KEY,JSON.stringify(q));}catch(e){}}
+function mergePendingIntoRows(){
+  const pending=loadPendingQueue();
+  if(!pending.length)return;
+  const existingIds=new Set(rows.map(r=>r.id));
+  const toAdd=pending.filter(p=>!existingIds.has(p.id));
+  rows=toAdd.concat(rows);
+}
+let flushingQueue=false;
+async function flushPendingQueue(){
+  if(flushingQueue||!navigator.onLine)return;
+  const queue=loadPendingQueue();
+  if(!queue.length)return;
+  flushingQueue=true;
+  const remaining=[];
+  for(const item of queue){
+    try{
+      const rec={dato:item.dato,beskrivelse:item.beskrivelse,kode:item.kode,belob:item.belob,valuta:item.valuta,rate_used:item.rate_used,hvem:item.hvem};
+      const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
+      const i=rows.findIndex(r=>r.id===item.id);
+      if(i>=0)rows[i]=data[0];
+    }catch(err){
+      remaining.push(item); // stadig offline eller fejl — prøv igen senere
+    }
+  }
+  savePendingQueue(remaining);
+  flushingQueue=false;
+  saveCacheToStorage();
+  if(queue.length&&!remaining.length)setStatus("Offline-udgifter synkroniseret ✓","ok");
+  render();
+}
+function loadTripDates(){
+  try{const s=JSON.parse(localStorage.getItem(TRIP_KEY));if(s&&s.afrejse&&s.hjem)return s;}catch(e){}
+  return {afrejse:"2026-09-28",hjem:"2026-11-24"};
+}
+function saveTripDates(a,h){localStorage.setItem(TRIP_KEY,JSON.stringify({afrejse:a,hjem:h}));renderCountdown();}
+function saveTripDatesFromInputs(){
+  const a=$("s-afrejse").value,h=$("s-hjem").value;
+  if(!a||!h){setStatus("Udfyld begge datoer","err");return;}
+  saveTripDates(a,h);setStatus("Datoer gemt ✓","ok");
+}
+function renderCountdown(){
+  const d=loadTripDates();
+  const today=new Date();today.setHours(0,0,0,0);
+  const dAf=new Date(d.afrejse+"T00:00:00");
+  const dHj=new Date(d.hjem+"T00:00:00");
+  const daysUntil=n=>Math.round((n-today)/86400000);
+  const toAf=daysUntil(dAf),toHj=daysUntil(dHj);
+  let txt;
+  if(toAf>0)txt="✈️ "+toAf+" dage til afrejse";
+  else if(toHj>=0)txt="🌏 Dag "+((toAf*-1)+1)+" af rejsen · "+toHj+" dage tilbage";
+  else txt="🏡 Hjemme igen";
+  const el=$("countdown");if(el)el.innerHTML=txt;
+  const si=$("s-afrejse"),sh=$("s-hjem");if(si)si.value=d.afrejse;if(sh)sh.value=d.hjem;
+}
+
+async function loadAll(silent){
+  if(!navigator.onLine){setStatus("Ingen forbindelse – prøver igen når du er online","err",true);return;}
+  if(!silent)setStatus("Henter data…","sync",true);
+  try{
+    const [c,s,e]=await Promise.all([
+      api("/categories?select=*"),
+      api("/settings?select=*"),
+      api("/expenses?select=*&order=created_at.desc")]);
+    cats=c||[];
+    (s||[]).forEach(x=>{if(x.key==="rate_JPY")rates.JPY=Number(x.value);if(x.key==="rate_AUD")rates.AUD=Number(x.value);});
+    rows=e||[];loaded=true;
+    mergePendingIntoRows();
+    $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
+    fillKodeDropdown();
+    saveCacheToStorage();
+    if(!silent)setStatus("Forbundet ✓","ok");
+    render();
+  }catch(err){setStatus("Kunne ikke hente data: "+(err.message||err),"err",true);}
+}
+function confettiBurst(originEl){
+  if(reducedMotion()||!originEl)return;
+  const rect=originEl.getBoundingClientRect();
+  const colors=["#2563eb","#4f8ff7","#16a34a","#34c766","#0ea5e9"];
+  for(let i=0;i<16;i++){
+    const p=document.createElement("div");
+    p.className="confetti";
+    const angle=Math.random()*Math.PI*2;
+    const dist=40+Math.random()*90;
+    p.style.setProperty("--dx",(Math.cos(angle)*dist)+"px");
+    p.style.setProperty("--dy",(Math.sin(angle)*dist-40)+"px");
+    p.style.left=(rect.left+rect.width/2)+"px";
+    p.style.top=(rect.top+rect.height/2)+"px";
+    p.style.background=colors[i%colors.length];
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),700);
+  }
+}
+function morphToSuccess(btn,holdMs){
+  return new Promise(resolve=>{
+    if(reducedMotion()){setTimeout(resolve,150);return;}
+    btn.classList.add("success");
+    setTimeout(()=>{btn.classList.remove("success");resolve();},holdMs);
+  });
+}
+async function addExpense(){
+  const belob=parseFloat($("f-belob").value),val=$("f-valuta").value,kode=$("f-kode").value;
+  $("f-belob").classList.remove("err-field");
+  if(!(belob>0)){$("f-belob").classList.add("err-field");setStatus("Skriv et beløb større end 0","err");return;}
+  if(!kode){setStatus("Vælg en kategori","err");return;}
+  const rec={dato:new Date().toISOString().slice(0,10),beskrivelse:$("f-besk").value.trim()||null,
+    kode:kode,belob:belob,valuta:val,rate_used:rates[val],hvem:who};
+  const btn=$("add-btn");
+  btn.disabled=true;setStatus("Gemmer…","sync",true);
+  if(!navigator.onLine){
+    queueOffline(rec,btn);
+    return;
+  }
+  try{
+    const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
+    rows.unshift(data[0]);$("f-besk").value="";$("f-belob").value="";updatePreview();
+    saveCacheToStorage();
+    setStatus("Gemt ✓","ok");
+    confettiBurst(btn);
+    render();
+    await morphToSuccess(btn,1100);
+    btn.disabled=false;
+  }catch(err){
+    if(err instanceof TypeError){
+      // Netværksfejl midt i forsøget (mistede forbindelsen) — gem lokalt i stedet for at vise en hård fejl
+      queueOffline(rec,btn);
+    }else{
+      setStatus("Fejl ved gem: "+(err.message||err),"err",true);
+      btn.disabled=false;
+    }
+  }
+}
+function queueOffline(rec,btn){
+  const localId="local-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);
+  const localRow=Object.assign({},rec,{
+    id:localId,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+    belob_dkk:Math.round(rec.belob*rec.rate_used*100)/100,
+    _pending:true
+  });
+  rows.unshift(localRow);
+  const queue=loadPendingQueue();queue.push(localRow);savePendingQueue(queue);
+  saveCacheToStorage();
+  $("f-besk").value="";$("f-belob").value="";updatePreview();
+  setStatus("Offline — gemt lokalt, synces automatisk ✓","ok",true);
+  confettiBurst(btn);
+  render();
+  btn.disabled=false;
+}
+function openEdit(id){const r=rows.find(x=>x.id===id);if(!r)return;editingId=id;
+  $("e-besk").value=r.beskrivelse||"";$("e-belob").value=r.belob;$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
+  $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order).map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");
+  $("e-kode").value=r.kode;
+  $("modal").classList.add("show");
+  const sheet=document.querySelector("#modal .sheet");
+  sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
+}
+function mainTap(id){
+  if(justSwiped)return;
+  const r=rows.find(x=>x.id===id);
+  if(r&&r._pending){setStatus("Venter på forbindelse — kan rettes når den er synkroniseret","err");return;}
+  openEdit(id);
+}
+function closeModal(){$("modal").classList.remove("show");editingId=null;}
+async function saveEdit(){
+  const belob=parseFloat($("e-belob").value);
+  if(!(belob>0)){setStatus("Beløb skal være større end 0","err");return;}
+  const val=$("e-valuta").value;
+  const patch={beskrivelse:$("e-besk").value.trim()||null,belob:belob,valuta:val,rate_used:rates[val],kode:$("e-kode").value,hvem:$("e-hvem").value};
+  setStatus("Gemmer…","sync",true);
+  try{
+    const data=await api("/expenses?id=eq."+editingId,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+    const i=rows.findIndex(x=>x.id===editingId);if(i>=0)rows[i]=data[0];
+    saveCacheToStorage();
+    closeModal();setStatus("Rettet ✓","ok");render();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+function delExpense(id,ev){
+  if(ev)ev.stopPropagation();
+  if(pendingDeletes.has(id))return;
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  if(r._pending){
+    // Ligger kun i den lokale offline-kø endnu — fjern direkte, intet at slette på serveren
+    rows=rows.filter(x=>x.id!==id);
+    savePendingQueue(loadPendingQueue().filter(x=>x.id!==id));
+    saveCacheToStorage();
+    setStatus("Fjernet fra offline-køen","ok");
+    render();
+    return;
+  }
+  pendingDeletes.add(id);render();
+  showUndoToast(r);
+}
+function showUndoToast(r){
+  const id=r.id;
+  const el=document.createElement("div");
+  el.className="toast";el.dataset.id=id;
+  const txt=(r.beskrivelse||label(r.kode));
+  el.innerHTML='<div class="txt">Slettet: '+txt.replace(/</g,"&lt;")+'</div><button type="button">Fortryd</button><div class="bar2" style="animation-duration:5000ms"></div>';
+  el.querySelector("button").onclick=()=>undoDelete(id);
+  $("toasts").appendChild(el);
+  toastTimers[id]=setTimeout(()=>commitDelete(id),5000);
+}
+function removeToastEl(id){
+  const el=document.querySelector('.toast[data-id="'+id+'"]');
+  if(!el)return;
+  el.classList.add("out");
+  setTimeout(()=>el.remove(),180);
+}
+function undoDelete(id){
+  clearTimeout(toastTimers[id]);delete toastTimers[id];
+  pendingDeletes.delete(id);
+  removeToastEl(id);
+  render();
+}
+async function commitDelete(id){
+  delete toastTimers[id];
+  removeToastEl(id);
+  try{
+    await api("/expenses?id=eq."+id,{method:"DELETE"});
+    rows=rows.filter(r=>r.id!==id);pendingDeletes.delete(id);saveCacheToStorage();render();
+  }catch(err){pendingDeletes.delete(id);setStatus("Kunne ikke slette: "+(err.message||err),"err",true);render();}
+}
+async function saveRates(){
+  const jpy=parseFloat($("s-jpy").value),aud=parseFloat($("s-aud").value);
+  if(!(jpy>0)||!(aud>0)){setStatus("Kurser skal være større end 0","err");return;}
+  setStatus("Gemmer kurser…","sync",true);
+  try{
+    await api("/settings?key=eq.rate_JPY",{method:"PATCH",body:JSON.stringify({value:jpy,updated_at:new Date().toISOString()})});
+    await api("/settings?key=eq.rate_AUD",{method:"PATCH",body:JSON.stringify({value:aud,updated_at:new Date().toISOString()})});
+    rates.JPY=jpy;rates.AUD=aud;saveCacheToStorage();setStatus("Kurser gemt ✓","ok");updatePreview();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+async function fetchLiveRates(){
+  setStatus("Henter dagens kurser…","sync",true);
+  try{
+    const [j,a]=await Promise.all([
+      fetch("https://api.frankfurter.app/latest?from=JPY&to=DKK").then(r=>r.json()),
+      fetch("https://api.frankfurter.app/latest?from=AUD&to=DKK").then(r=>r.json())
+    ]);
+    const jpy=j&&j.rates&&j.rates.DKK,aud=a&&a.rates&&a.rates.DKK;
+    if(!(jpy>0)||!(aud>0))throw new Error("Uventet svar fra kurstjeneste");
+    $("s-jpy").value=jpy.toFixed(4);
+    $("s-aud").value=aud.toFixed(3);
+    setStatus('Kurser hentet — tjek og tryk "Gem kurser"',"ok",true);
+  }catch(err){setStatus("Kunne ikke hente kurser: "+(err.message||err),"err",true);}
+}
+function spentByKode(w){const m={};rows.filter(r=>r.hvem===w&&!pendingDeletes.has(r.id)).forEach(r=>{m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
+function spentByView(v){
+  if(v==="Begge"){const m={};rows.forEach(r=>{if(pendingDeletes.has(r.id))return;m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
+  return spentByKode(v);
+}
+// --- Talanimation (tæller op/ned til ny værdi) ---
+function animateNumber(el,to){
+  if(!el)return;
+  const prev=Number(el.dataset.val||0);
+  el.dataset.val=to;
+  if(reducedMotion()||prev===to){el.textContent=kr(to);return;}
+  const dur=500,start=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-start)/dur);
+    const eased=1-Math.pow(1-t,3);
+    el.textContent=kr(prev+(to-prev)*eased);
+    if(t<1)requestAnimationFrame(step);else el.textContent=kr(to);
+  }
+  requestAnimationFrame(step);
+}
+// --- Swipe-til-slet på log-rækker (pointer events, virker med touch og mus) ---
+function makeSwipeable(rowEl,id){
+  let startX=0,startY=0,dx=0,dragging=false,decided=false,isHoriz=false;
+  rowEl.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".del"))return;
+    dragging=true;decided=false;isHoriz=false;dx=0;
+    startX=e.clientX;startY=e.clientY;
+    try{rowEl.setPointerCapture(e.pointerId);}catch(err){}
+    rowEl.style.transition="none";
+  });
+  rowEl.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    const ddx=e.clientX-startX,ddy=e.clientY-startY;
+    if(!decided){
+      if(Math.abs(ddx)>8||Math.abs(ddy)>8){decided=true;isHoriz=Math.abs(ddx)>Math.abs(ddy);}
+      else return;
+    }
+    if(!isHoriz)return;
+    dx=Math.min(0,ddx);
+    rowEl.style.transform="translateX("+dx+"px)";
+    rowEl.style.opacity=String(Math.max(.25,1+dx/200));
+  });
+  function end(){
+    if(!dragging)return;dragging=false;
+    if(!isHoriz){rowEl.style.transform="";rowEl.style.opacity="";return;}
+    justSwiped=true;setTimeout(()=>{justSwiped=false;},300);
+    rowEl.style.transition="transform 220ms "+"var(--ease-out-cubic)"+",opacity 220ms "+"var(--ease-out-cubic)";
+    if(dx<-90){
+      rowEl.style.transform="translateX(-120%)";rowEl.style.opacity="0";
+      setTimeout(()=>delExpense(id),180);
+    }else{
+      rowEl.style.transform="translateX(0)";rowEl.style.opacity="1";
+    }
+  }
+  rowEl.addEventListener("pointerup",end);
+  rowEl.addEventListener("pointercancel",end);
+}
+function render(){
+  if(!loaded)return;
+  const enteringNow=justEnteredTab;justEnteredTab=false;
+  if(tab==="kasser"){
+    const list=catsForView(kasserView),spent=spentByView(kasserView);
+    let totB=0,totS=0,html="",lastSek="",i=0;
+    list.forEach(c=>{
+      const bud=budgetOfView(c,kasserView),sp=spent[c.kode]||0,pct=bud?Math.min(sp/bud*100,100):0;
+      const cls=sp>bud?"over":(sp>bud*0.85?"warn":"");totB+=bud;totS+=sp;
+      if(c.sektion!==lastSek){html+='<div class="sekhd">'+c.sektion+'</div>';lastSek=c.sektion;}
+      const rowCls="kasse"+(enteringNow?" row-in":"");
+      const delay=enteringNow?(Math.min(i,10)*30):0;i++;
+      html+='<div class="'+rowCls+'" style="animation-delay:'+delay+'ms"><div class="top"><div>'+icon(c.kode)+' '+c.label+'</div><div class="amt">'+kr(sp)+' <span class="muted">/ '+kr(bud)+'</span></div></div><div class="bar '+cls+'"><span style="width:'+pct+'%"></span></div></div>';
+    });
+    html+='<div class="tot"><span>Rejse + shopping i alt</span><span>'+kr(totS)+' / '+kr(totB)+'</span></div>';
+    $("kasser").innerHTML=html;
+  }
+  if(tab==="log"){
+    let mine=rows.filter(r=>r.hvem===who&&!pendingDeletes.has(r.id));
+    if(searchQuery){const q=searchQuery;mine=mine.filter(r=>((r.beskrivelse||"")+" "+label(r.kode)).toLowerCase().includes(q));}
+    if(!mine.length){$("log").innerHTML='<div class="muted">'+(searchQuery?"Ingen udgifter matcher søgningen.":"Ingen udgifter endnu.")+'</div>';return;}
+    $("log").innerHTML=mine.map((r,i)=>{
+      const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
+      const t=(r.beskrivelse||label(r.kode)).replace(/</g,"&lt;");
+      const rowCls="logrow"+(enteringNow?" row-in":"");
+      const delay=enteringNow?(Math.min(i,10)*30):0;
+      const pendingTag=r._pending?' <span class="muted">· ⏳ afventer sync</span>':"";
+      return '<div class="'+rowCls+'" data-id="'+r.id+'" style="animation-delay:'+delay+'ms"><div class="main" onclick="mainTap(\''+r.id+'\')"><div class="t">'+icon(r.kode)+' '+t+'</div><div class="d">'+(r.dato||"")+' · '+label(r.kode)+orig+pendingTag+'</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div><button class="del" onclick="delExpense(\''+r.id+'\',event)">×</button></div>';
+    }).join("");
+    document.querySelectorAll("#log .logrow").forEach(el=>makeSwipeable(el,el.dataset.id));
+  }
+  if(tab==="mere"){
+    const sj=Object.values(spentByKode("Jakob")).reduce((a,b)=>a+b,0);
+    const sf=Object.values(spentByKode("Frida")).reduce((a,b)=>a+b,0);
+    animateNumber($("ov-jakob"),sj);
+    animateNumber($("ov-frida"),sf);
+    animateNumber($("ov-par"),sj+sf);
+  }
+}
+function exportCSV(){
+  const head="Dato;Beskrivelse;Kode;Beløb;Valuta;DKK;Hvem";
+  const lines=rows.slice().reverse().map(r=>[r.dato,(r.beskrivelse||"").replace(/;/g,","),r.kode,r.belob,r.valuta,r.belob_dkk,r.hvem].join(";"));
+  const csv=[head].concat(lines).join("\n");
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(()=>setStatus("Kopieret ✓ – indsæt i Excel","ok"),()=>prompt("Kopiér manuelt:",csv));
+  }else prompt("Kopiér manuelt:",csv);
+}
+$("f-belob").addEventListener("input",updatePreview);
+$("f-valuta").addEventListener("change",updatePreview);
+$("log-search").addEventListener("input",e=>{searchQuery=e.target.value.trim().toLowerCase();render();});
+window.addEventListener("online",()=>{setStatus("Online igen – opdaterer…","sync",true);flushPendingQueue().then(()=>loadAll());});
+window.addEventListener("offline",()=>setStatus("Offline – nye udgifter gemmes lokalt og synces automatisk","err",true));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&loaded){flushPendingQueue();loadAll(true);}});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
+window.addEventListener("resize",()=>{
+  if($("app").style.display!=="block")return;
+  initIndicator($("whobar"),who==="Jakob"?$("w-jakob"):$("w-frida"));
+  initIndicator($("tabsbar"),$("t-"+tab));
+  initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));
+});
+// let poll så Frida og Jakob ser hinandens ændringer, og prøv løbende at sende offline-køen
+pollTimer=setInterval(()=>{
+  if(loaded&&!document.hidden&&!$("modal").classList.contains("show")){
+    flushPendingQueue();
+    loadAll(true);
+  }
+},45000);
+renderCountdown();
+const hadCache=loadCacheFromStorage();
+if(hadCache)mergePendingIntoRows();
+loadAll(hadCache);
+if(navigator.onLine)flushPendingQueue();
+</script>
+</body>
+</html>
