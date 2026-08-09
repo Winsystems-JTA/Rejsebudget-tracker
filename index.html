@@ -16,6 +16,7 @@
     --bg:#ffffff; --card:#ffffff; --card2:#eaf2fb; --line:#d7e3ee; --ink:#152a3d;
     --muted:#64798c; --accent:#2563eb; --accent2:#4f8ff7; --good:#16a34a; --good2:#34c766;
     --warn:#d97706; --bad:#dc2626;
+    --good-text:#15803d; --bad-text:#b91c1c; --accent-text:#1d4ed8;
     --ease-out-quint: cubic-bezier(.23,1,.32,1);
     --ease-out-cubic: cubic-bezier(.33,1,.68,1);
     --ease-in-cubic: cubic-bezier(.55,.06,.68,.19);
@@ -31,6 +32,7 @@
   .sub{color:var(--muted);font-size:13px;margin-bottom:8px}
   .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--muted);
     font-size:12px;padding:5px 10px;border-radius:999px;margin-bottom:12px}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   /* --- Startskærm --- */
   #splash{position:fixed;inset:0;background:linear-gradient(160deg,#ffffff,#eaf2fb 55%,#eafaf1);
     display:flex;align-items:center;justify-content:center;z-index:100;padding:24px;
@@ -70,7 +72,6 @@
   .btn.accent{background:linear-gradient(135deg,var(--accent),var(--accent2))}
   .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
   .btn:active{opacity:.85} .btn:disabled{opacity:.5}
-  /* Knap der morfer til en grøn cirkel med hak, når en udgift er gemt */
   .btn.morph-btn{position:relative;overflow:hidden;height:48px;margin:0 auto;padding:0;
     transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic),
                width 380ms var(--ease-spring),border-radius 380ms var(--ease-spring)}
@@ -86,7 +87,9 @@
   .btn.morph-btn.success:disabled{opacity:1}
   .btn-check-mark{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset 300ms var(--ease-out-cubic) 260ms}
   .btn.morph-btn.success .btn-check-mark{stroke-dashoffset:0}
-  .kasse{padding:9px 0;border-bottom:1px solid var(--line)}
+  .kasse{padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;
+    transition:background 150ms var(--ease-out-cubic);border-radius:8px}
+  .kasse:hover{background:var(--card2)}
   .kasse:last-child{border-bottom:none}
   .kasse .top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
   .kasse .amt{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
@@ -128,9 +131,9 @@
   .status{font-size:12px;text-align:center;padding:7px;border-radius:8px;margin-bottom:10px;
     max-height:0;overflow:hidden;opacity:0;transition:max-height 200ms var(--ease-out-quint),opacity 200ms var(--ease-out-quint),margin-bottom 200ms var(--ease-out-quint)}
   .status.show{display:block;max-height:60px;opacity:1;margin-bottom:10px}
-  .status.ok{background:rgba(22,163,74,.1);color:var(--good)}
-  .status.err{background:rgba(220,38,38,.1);color:var(--bad)}
-  .status.sync{background:rgba(37,99,235,.1);color:var(--accent)}
+  .status.ok{background:rgba(22,163,74,.1);color:var(--good-text)}
+  .status.err{background:rgba(220,38,38,.1);color:var(--bad-text)}
+  .status.sync{background:rgba(37,99,235,.1);color:var(--accent-text)}
   .muted{color:var(--muted)}
   .skel{height:14px;background:linear-gradient(90deg,#eef2f6,#e2e9f0,#eef2f6);
     background-size:200% 100%;animation:sh 1.2s infinite;border-radius:4px;margin:10px 0}
@@ -143,7 +146,7 @@
   .modal.show{visibility:visible;opacity:1;background-color:rgba(15,25,35,.45);
     transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 0s}
   .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;
-    padding:18px;width:100%;max-width:640px;box-shadow:0 -8px 30px rgba(21,42,61,.12)}
+    padding:18px;width:100%;max-width:640px;max-height:80vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(21,42,61,.12)}
   .sheet.anim{animation:up 220ms var(--ease-spring)}
   @keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
   .err-field{border-color:var(--bad)!important}
@@ -171,6 +174,40 @@
     0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}
     100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(260deg) scale(.4)}
   }
+  .forecast-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line)}
+  .forecast-row:last-child{border-bottom:none}
+  .forecast-row .l{color:var(--muted)}
+  .forecast-row .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .forecast-v.over{color:var(--bad-text)} .forecast-v.under{color:var(--good-text)}
+  .donut-wrap{display:flex;align-items:center;gap:16px}
+  .donut-legend{flex:1;font-size:12px}
+  .donut-legend .li{display:flex;align-items:center;gap:6px;margin:4px 0}
+  .donut-legend .dot{width:10px;height:10px;border-radius:3px;flex:none}
+  .donut-seg{transition:stroke-dashoffset 700ms var(--ease-out-quint)}
+  .cl-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+    border-bottom:1px solid var(--line);gap:8px}
+  .cl-row:last-child{border-bottom:none}
+  .cl-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer}
+  .cl-check{font-size:18px;flex:none;transition:transform 150ms var(--ease-spring)}
+  .cl-main:active .cl-check{transform:scale(1.25)}
+  .cl-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+  .cl-text.done{text-decoration:line-through;color:var(--muted)}
+  .cl-who{font-size:11px;color:var(--muted)}
+  .amt-wrap{position:relative}
+  .amt-wrap input{cursor:pointer;padding-right:34px}
+  .amt-wrap .amt-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;
+    font-size:15px;opacity:.55}
+  .calc-panel{max-height:0;overflow:hidden;transition:max-height 260ms var(--ease-out-quint);margin-top:8px}
+  .calc-toprow{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-top:4px}
+  .calc-ops{display:flex;gap:6px;flex:1}
+  .calc-btn{padding:14px 0;border:none;border-radius:10px;background:var(--card2);color:var(--ink);
+    font-size:19px;font-weight:600;cursor:pointer;transition:transform 100ms var(--ease-out-cubic),background 150ms}
+  .calc-btn:active{transform:scale(.95);background:#dbe6f2}
+  .calc-btn.op{flex:1;color:var(--accent);font-weight:700;font-size:18px;padding:12px 0}
+  .calc-btn.back{color:var(--bad-text);font-size:17px}
+  .calc-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-size:12px;padding:8px 12px;cursor:pointer;flex:none}
+  .calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 </style>
 </head>
 <body>
@@ -181,7 +218,7 @@
     <div class="splash-sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
     <button class="btn accent splash-btn" id="splash-btn" onclick="enterApp()">
       <span>Kom i gang</span>
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" style="margin-left:8px;vertical-align:-3px">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true" style="margin-left:8px;vertical-align:-3px">
         <path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
@@ -192,7 +229,7 @@
 <h1>Rejsebudget</h1>
 <div class="sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
 <div id="countdown" class="pill"></div>
-<div id="status" class="status"></div>
+<div id="status" class="status" role="status" aria-live="polite"></div>
 <div class="who" id="whobar">
   <div class="ind"></div>
   <button id="w-jakob" class="active" onclick="setWho('Jakob')">Jakob</button>
@@ -210,37 +247,73 @@
   <label>Beskrivelse <span class="muted">(valgfri)</span></label>
   <input id="f-besk" placeholder="fx Ramen i Shinjuku" maxlength="120">
   <div class="row">
-    <div><label>Beløb</label><input id="f-belob" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></div>
+    <div><label>Beløb</label>
+      <div class="amt-wrap">
+        <input id="f-belob" type="text" inputmode="none" readonly placeholder="0" onclick="openCalc('add')" aria-label="Beløb – tryk for at åbne regnemaskine">
+        <span class="amt-icon" aria-hidden="true">🧮</span>
+      </div>
+    </div>
     <div><label>Valuta</label><select id="f-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+  </div>
+  <div class="calc-panel" id="calc-panel">
+    <div class="calc-toprow">
+      <div class="calc-ops">
+        <button type="button" class="calc-btn op" onclick="calcPress('add','+')" aria-label="Plus">+</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('add','-')" aria-label="Minus">−</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('add','*')" aria-label="Gange">×</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('add','/')" aria-label="Division">÷</button>
+      </div>
+      <button type="button" class="calc-clear" onclick="calcPress('add','C')">Ryd</button>
+    </div>
+    <div class="calc-grid">
+      <button type="button" class="calc-btn" onclick="calcPress('add','1')">1</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','2')">2</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','3')">3</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','4')">4</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','5')">5</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','6')">6</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','7')">7</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','8')">8</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','9')">9</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','.')">,</button>
+      <button type="button" class="calc-btn" onclick="calcPress('add','0')">0</button>
+      <button type="button" class="calc-btn back" onclick="calcPress('add','back')" aria-label="Slet sidste tegn">⌫</button>
+    </div>
+    <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc('add')">Færdig</button>
   </div>
   <label>Kategori</label>
   <select id="f-kode"></select>
   <div id="f-preview" class="sub" style="margin:8px 0 0"></div>
   <button class="btn good morph-btn" style="margin-top:12px" onclick="addExpense()" id="add-btn">
     <span class="btn-label">Tilføj udgift</span>
-    <svg class="btn-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg class="btn-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path class="btn-check-mark" d="M4 12.5l5.5 5.5L20 6.5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </button>
 </div>
 <div id="tab-kasser" class="card" style="display:none">
-  <div class="hd"><span>Kasser for <span id="who-label2">Jakob</span></span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+  <div class="hd"><span>Kasser for <span id="who-label2">Jakob</span></span><button class="refresh" onclick="loadAll(true)" aria-label="Opdatér data">Opdatér</button></div>
   <div class="seg" id="kasser-seg">
     <div class="ind"></div>
     <button data-v="Jakob" class="active" onclick="setKasserView('Jakob')">Jakob</button>
     <button data-v="Frida" onclick="setKasserView('Frida')">Frida</button>
     <button data-v="Begge" onclick="setKasserView('Begge')">Begge</button>
   </div>
+  <div class="totals-grid" id="periode-overblik" style="margin-bottom:10px">
+    <div class="totbox"><div class="v" id="pd-today">–</div><div class="l">I dag</div></div>
+    <div class="totbox"><div class="v" id="pd-week">–</div><div class="l">Seneste 7 dage</div></div>
+  </div>
+  <div class="sub" style="margin-bottom:4px">Tryk på en kategori for at se dens udgifter</div>
   <div id="kasser"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
 </div>
 <div id="tab-log" class="card" style="display:none">
-  <div class="hd"><span>Udgifter · tryk for at rette, swipe for at slette</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
-  <input id="log-search" placeholder="Søg i beskrivelse eller kategori…" style="margin-bottom:10px">
+  <div class="hd"><span>Udgifter · tryk for at rette, swipe for at slette</span><button class="refresh" onclick="loadAll(true)" aria-label="Opdatér data">Opdatér</button></div>
+  <input id="log-search" placeholder="Søg i beskrivelse eller kategori…" aria-label="Søg i udgifter" style="margin-bottom:10px">
   <div id="log"><div class="skel"></div><div class="skel"></div></div>
 </div>
 <div id="tab-mere" style="display:none">
   <div class="card">
-    <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+    <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)" aria-label="Opdatér data">Opdatér</button></div>
     <div class="totals-grid">
       <div class="totbox"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
       <div class="totbox"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
@@ -248,8 +321,33 @@
     </div>
   </div>
   <div class="card">
+    <div class="hd">Indkøbs- &amp; huskeliste</div>
+    <div class="row" style="align-items:flex-end;gap:8px">
+      <div style="flex:3">
+        <input id="cl-input" placeholder="Tilføj punkt…" maxlength="140" aria-label="Nyt punkt til liste"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}">
+      </div>
+      <div style="flex:1">
+        <button class="btn accent" style="padding:11px 0" onclick="addChecklistItem()">Tilføj</button>
+      </div>
+    </div>
+    <div id="checklist" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <div class="hd">Forbrugsprognose</div>
+    <div id="forecast"></div>
+  </div>
+  <div class="card">
+    <div class="hd">Hvor går pengene hen</div>
+    <div id="donut"></div>
+  </div>
+  <div class="card">
+    <div class="hd">Indsigt</div>
+    <div id="insight"></div>
+  </div>
+  <div class="card">
     <div class="hd">Rejsedatoer</div>
-    <div class="sub">Bruges kun til nedtællingen øverst. Gemmes lokalt på denne enhed (ikke delt med den anden af jer).</div>
+    <div class="sub">Bruges til nedtælling og forbrugsprognose. Gemmes lokalt på denne enhed (ikke delt med den anden af jer).</div>
     <div class="row">
       <div><label>Afrejse</label><input id="s-afrejse" type="date"></div>
       <div><label>Hjemme</label><input id="s-hjem" type="date"></div>
@@ -272,14 +370,46 @@
     <button class="btn ghost" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
   </div>
 </div>
-<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
   <div class="sheet">
-    <div class="hd">Ret udgift</div>
+    <div class="hd" id="modal-title">Ret udgift</div>
     <label>Beskrivelse</label>
     <input id="e-besk" maxlength="120">
     <div class="row">
-      <div><label>Beløb</label><input id="e-belob" type="number" step="any" min="0"></div>
+      <div><label>Beløb</label>
+        <div class="amt-wrap">
+          <input id="e-belob" type="text" inputmode="none" readonly onclick="openCalc('edit')" aria-label="Beløb – tryk for at åbne regnemaskine">
+          <span class="amt-icon" aria-hidden="true">🧮</span>
+        </div>
+      </div>
       <div><label>Valuta</label><select id="e-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+    </div>
+    <div id="e-preview" class="sub" style="margin:4px 0 0"></div>
+    <div class="calc-panel" id="calc-panel-edit">
+      <div class="calc-toprow">
+        <div class="calc-ops">
+          <button type="button" class="calc-btn op" onclick="calcPress('edit','+')" aria-label="Plus">+</button>
+          <button type="button" class="calc-btn op" onclick="calcPress('edit','-')" aria-label="Minus">−</button>
+          <button type="button" class="calc-btn op" onclick="calcPress('edit','*')" aria-label="Gange">×</button>
+          <button type="button" class="calc-btn op" onclick="calcPress('edit','/')" aria-label="Division">÷</button>
+        </div>
+        <button type="button" class="calc-clear" onclick="calcPress('edit','C')">Ryd</button>
+      </div>
+      <div class="calc-grid">
+        <button type="button" class="calc-btn" onclick="calcPress('edit','1')">1</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','2')">2</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','3')">3</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','4')">4</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','5')">5</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','6')">6</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','7')">7</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','8')">8</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','9')">9</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','.')">,</button>
+        <button type="button" class="calc-btn" onclick="calcPress('edit','0')">0</button>
+        <button type="button" class="calc-btn back" onclick="calcPress('edit','back')" aria-label="Slet sidste tegn">⌫</button>
+      </div>
+      <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc('edit')">Færdig</button>
     </div>
     <label>Kategori</label>
     <select id="e-kode"></select>
@@ -287,6 +417,12 @@
     <select id="e-hvem"><option>Jakob</option><option>Frida</option></select>
     <button class="btn accent" style="margin-top:14px" onclick="saveEdit()">Gem ændringer</button>
     <button class="btn ghost" style="margin-top:8px" onclick="closeModal()">Annullér</button>
+  </div>
+</div>
+<div id="drill" class="modal" role="dialog" aria-modal="true" aria-labelledby="drill-title" onclick="if(event.target===this)closeDrill()">
+  <div class="sheet">
+    <div class="hd"><span id="drill-title">Kategori</span><button class="refresh" onclick="closeDrill()" aria-label="Luk">Luk</button></div>
+    <div id="drill-list"></div>
   </div>
 </div>
 <div id="toasts" class="toasts"></div>
@@ -312,15 +448,18 @@ async function api(path,opts){
   return txt?JSON.parse(txt):null;
 }
 function reducedMotion(){return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;}
+function haptic(ms){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
 const ICONS={"Hotel JP":"🏨","Mad JP":"🍜","Splurge JP":"🍶","Shinkansen":"🚄","Metro JP":"🚇","Aktiviteter JP":"⛩️",
   "Bil":"🚙","Braendstof":"⛽","Parkering":"🅿️","Airbnb":"🏡","Hotel AU":"🏨","Mad camper":"🍳","Mad by AU":"🍽️",
   "Fly AU":"✈️","Rev":"🤿","Aktiviteter AU":"🎡","Transport AU":"🚌","Objektiv":"📷","Toj":"👕","Shopping":"🛍️"};
 function icon(kode){return ICONS[kode]||"💰";}
+const SEKTION_COLOR={"Japan":"#2563eb","Australien":"#16a34a","Shopping":"#d97706"};
 const CACHE_KEY="rejsebudget_cache_v2";
 const TRIP_KEY="rejsebudget_trip_dates";
 const PENDING_KEY="rejsebudget_pending_queue";
+function lastKodeKey(w){return "rejsebudget_last_kode_"+w;}
 let who="Jakob",tab="add",kasserView="Jakob",searchQuery="",justEnteredTab=true,justSwiped=false;
-let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40};
+let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40},checklist=[];
 let editingId=null,loaded=false,pollTimer=null;
 let pendingDeletes=new Set(),toastTimers={};
 const $=id=>document.getElementById(id);
@@ -336,9 +475,113 @@ function catsForView(v){
 }
 function budgetOfView(c,v){return v==="Begge"?Number(c.budget_jakob)+Number(c.budget_frida):budgetOf(c,v);}
 function label(kode){const c=cats.find(x=>x.kode===kode);return c?c.label:kode;}
-function fillKodeDropdown(){$("f-kode").innerHTML=catsForWho(who).map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");updatePreview();}
-function updatePreview(){const b=parseFloat($("f-belob").value),v=$("f-valuta").value;
+function fillKodeDropdown(){
+  const list=catsForWho(who);
+  $("f-kode").innerHTML=list.map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");
+  try{
+    const last=localStorage.getItem(lastKodeKey(who));
+    if(last&&list.some(c=>c.kode===last))$("f-kode").value=last;
+  }catch(e){}
+  updatePreview();
+}
+function updatePreview(){const b=getCalcValue("add"),v=$("f-valuta").value;
   $("f-preview").textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";}
+function updatePreviewEdit(){const b=getCalcValue("edit"),v=$("e-valuta").value;
+  const el=$("e-preview");if(!el)return;
+  el.textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";}
+
+// --- Regnemaskine-taltastatur til beløbsfelter (Tilføj + Ret udgift), ala MobilePay ---
+let calcState={add:{expr:"",justEval:false},edit:{expr:"",justEval:false}};
+function calcFormatNum(n){
+  if(!isFinite(n))return "0";
+  return String(Math.round(n*10000)/10000);
+}
+function calcEval(exprStr){
+  let s=(exprStr||"").replace(/[+\-*/]$/,"");
+  if(!s)return 0;
+  const tokens=s.match(/(\d+\.?\d*|[+\-*/])/g);
+  if(!tokens||!tokens.length)return 0;
+  let result=parseFloat(tokens[0])||0;
+  for(let i=1;i<tokens.length;i+=2){
+    const op=tokens[i],val=parseFloat(tokens[i+1]);
+    if(isNaN(val))break;
+    if(op==="+")result+=val;
+    else if(op==="-")result-=val;
+    else if(op==="*")result*=val;
+    else if(op==="/")result=val!==0?result/val:result;
+  }
+  return result;
+}
+function calcDisplayExpr(e){
+  return e.replace(/\*/g," × ").replace(/\//g," ÷ ").replace(/\+/g," + ").replace(/-/g," − ").replace(/\s+/g," ").trim();
+}
+function getCalcValue(ctx){
+  const st=calcState[ctx];
+  if(!st||!st.expr)return 0;
+  return calcEval(st.expr);
+}
+function calcRender(ctx){
+  const st=calcState[ctx];
+  const field=$(ctx==="add"?"f-belob":"e-belob");
+  if(field)field.value=st.expr?calcDisplayExpr(st.expr):"";
+}
+function calcPress(ctx,key){
+  const st=calcState[ctx];
+  const isOp=k=>["+","-","*","/"].includes(k);
+  if(key==="C"){
+    st.expr="";st.justEval=false;
+  }else if(key==="back"){
+    if(st.justEval){st.expr="";st.justEval=false;}
+    else st.expr=st.expr.slice(0,-1);
+  }else if(isOp(key)){
+    if(st.justEval)st.justEval=false;
+    if(!st.expr)return;
+    const last=st.expr.slice(-1);
+    if(isOp(last))st.expr=st.expr.slice(0,-1)+key;
+    else st.expr+=key;
+  }else if(key==="."){
+    if(st.justEval){st.expr="0.";st.justEval=false;}
+    else{
+      const parts=st.expr.split(/[+\-*/]/);
+      const seg=parts[parts.length-1];
+      if(seg.includes("."))return;
+      st.expr+=(seg===""?"0.":".");
+    }
+  }else{ // digit
+    if(st.justEval){st.expr=key;st.justEval=false;}
+    else st.expr+=key;
+  }
+  calcRender(ctx);
+  haptic(6);
+  if(ctx==="add")updatePreview();else updatePreviewEdit();
+}
+function openCalc(ctx){
+  closeCalc(ctx==="add"?"edit":"add");
+  const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
+  if(!panel||panel.classList.contains("open"))return;
+  panel.classList.add("open");
+  panel.style.maxHeight=panel.scrollHeight+"px";
+}
+function closeCalc(ctx){
+  const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
+  if(!panel)return;
+  panel.classList.remove("open");
+  panel.style.maxHeight="0px";
+}
+function resetCalc(ctx){
+  calcState[ctx]={expr:"",justEval:false};
+  calcRender(ctx);
+  closeCalc(ctx);
+}
+document.addEventListener("click",e=>{
+  ["add","edit"].forEach(ctx=>{
+    const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
+    const field=$(ctx==="add"?"f-belob":"e-belob");
+    if(panel&&panel.classList.contains("open")&&!panel.contains(e.target)&&e.target!==field){
+      closeCalc(ctx);
+    }
+  });
+});
 
 // --- Startskærm ---
 function enterApp(){
@@ -352,7 +595,17 @@ function enterApp(){
     initIndicator($("whobar"),$("w-jakob"));
     initIndicator($("tabsbar"),$("t-add"));
     initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="Jakob"]'));
+    applyShortcutParams();
   },reducedMotion()?0:380);
+}
+function applyShortcutParams(){
+  try{
+    const params=new URLSearchParams(location.search);
+    const qWho=params.get("who");
+    if(qWho==="Jakob"||qWho==="Frida")setWho(qWho);
+    const qTab=params.get("tab");
+    if(["add","kasser","log","mere"].includes(qTab))setTab(qTab);
+  }catch(e){}
 }
 
 // --- Glidende "pille"-indikator bag de aktive knapper (tabs / who / seg) ---
@@ -400,6 +653,7 @@ function loadCacheFromStorage(){
     const c=JSON.parse(raw);
     if(!c||!Array.isArray(c.cats)||!Array.isArray(c.rows))return false;
     cats=c.cats;rows=c.rows;if(c.rates)rates=Object.assign(rates,c.rates);
+    checklist=Array.isArray(c.checklist)?c.checklist:[];
     loaded=true;
     $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
     fillKodeDropdown();render();
@@ -407,7 +661,7 @@ function loadCacheFromStorage(){
   }catch(e){return false;}
 }
 function saveCacheToStorage(){
-  try{localStorage.setItem(CACHE_KEY,JSON.stringify({cats:cats,rows:rows,rates:rates,savedAt:Date.now()}));}catch(e){}
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify({cats:cats,rows:rows,rates:rates,checklist:checklist,savedAt:Date.now()}));}catch(e){}
 }
 // --- Offline-kø: udgifter tastet uden forbindelse gemmes lokalt og sendes,
 // så snart telefonen er online igen. ---
@@ -436,7 +690,7 @@ async function flushPendingQueue(){
       const i=rows.findIndex(r=>r.id===item.id);
       if(i>=0)rows[i]=data[0];
     }catch(err){
-      remaining.push(item); // stadig offline eller fejl — prøv igen senere
+      remaining.push(item);
     }
   }
   savePendingQueue(remaining);
@@ -449,7 +703,7 @@ function loadTripDates(){
   try{const s=JSON.parse(localStorage.getItem(TRIP_KEY));if(s&&s.afrejse&&s.hjem)return s;}catch(e){}
   return {afrejse:"2026-09-28",hjem:"2026-11-24"};
 }
-function saveTripDates(a,h){localStorage.setItem(TRIP_KEY,JSON.stringify({afrejse:a,hjem:h}));renderCountdown();}
+function saveTripDates(a,h){localStorage.setItem(TRIP_KEY,JSON.stringify({afrejse:a,hjem:h}));renderCountdown();render();}
 function saveTripDatesFromInputs(){
   const a=$("s-afrejse").value,h=$("s-hjem").value;
   if(!a||!h){setStatus("Udfyld begge datoer","err");return;}
@@ -474,13 +728,14 @@ async function loadAll(silent){
   if(!navigator.onLine){setStatus("Ingen forbindelse – prøver igen når du er online","err",true);return;}
   if(!silent)setStatus("Henter data…","sync",true);
   try{
-    const [c,s,e]=await Promise.all([
+    const [c,s,e,cl]=await Promise.all([
       api("/categories?select=*"),
       api("/settings?select=*"),
-      api("/expenses?select=*&order=created_at.desc")]);
+      api("/expenses?select=*&order=created_at.desc"),
+      api("/checklist?select=*&order=created_at.desc")]);
     cats=c||[];
     (s||[]).forEach(x=>{if(x.key==="rate_JPY")rates.JPY=Number(x.value);if(x.key==="rate_AUD")rates.AUD=Number(x.value);});
-    rows=e||[];loaded=true;
+    rows=e||[];checklist=cl||[];loaded=true;
     mergePendingIntoRows();
     $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
     fillKodeDropdown();
@@ -515,12 +770,13 @@ function morphToSuccess(btn,holdMs){
   });
 }
 async function addExpense(){
-  const belob=parseFloat($("f-belob").value),val=$("f-valuta").value,kode=$("f-kode").value;
+  const belob=getCalcValue("add"),val=$("f-valuta").value,kode=$("f-kode").value;
   $("f-belob").classList.remove("err-field");
-  if(!(belob>0)){$("f-belob").classList.add("err-field");setStatus("Skriv et beløb større end 0","err");return;}
+  if(!(belob>0)){$("f-belob").classList.add("err-field");openCalc("add");setStatus("Skriv et beløb større end 0","err");return;}
   if(!kode){setStatus("Vælg en kategori","err");return;}
   const rec={dato:new Date().toISOString().slice(0,10),beskrivelse:$("f-besk").value.trim()||null,
     kode:kode,belob:belob,valuta:val,rate_used:rates[val],hvem:who};
+  try{localStorage.setItem(lastKodeKey(who),kode);}catch(e){}
   const btn=$("add-btn");
   btn.disabled=true;setStatus("Gemmer…","sync",true);
   if(!navigator.onLine){
@@ -529,16 +785,16 @@ async function addExpense(){
   }
   try{
     const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
-    rows.unshift(data[0]);$("f-besk").value="";$("f-belob").value="";updatePreview();
+    rows.unshift(data[0]);$("f-besk").value="";resetCalc("add");updatePreview();
     saveCacheToStorage();
     setStatus("Gemt ✓","ok");
+    haptic(15);
     confettiBurst(btn);
     render();
     await morphToSuccess(btn,1100);
     btn.disabled=false;
   }catch(err){
     if(err instanceof TypeError){
-      // Netværksfejl midt i forsøget (mistede forbindelsen) — gem lokalt i stedet for at vise en hård fejl
       queueOffline(rec,btn);
     }else{
       setStatus("Fejl ved gem: "+(err.message||err),"err",true);
@@ -558,14 +814,17 @@ function queueOffline(rec,btn){
   rows.unshift(localRow);
   const queue=loadPendingQueue();queue.push(localRow);savePendingQueue(queue);
   saveCacheToStorage();
-  $("f-besk").value="";$("f-belob").value="";updatePreview();
+  $("f-besk").value="";resetCalc("add");updatePreview();
   setStatus("Offline — gemt lokalt, synces automatisk ✓","ok",true);
+  haptic(15);
   confettiBurst(btn);
   render();
   btn.disabled=false;
 }
 function openEdit(id){const r=rows.find(x=>x.id===id);if(!r)return;editingId=id;
-  $("e-besk").value=r.beskrivelse||"";$("e-belob").value=r.belob;$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
+  $("e-besk").value=r.beskrivelse||"";$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
+  calcState.edit={expr:calcFormatNum(Number(r.belob)),justEval:false};
+  closeCalc("edit");calcRender("edit");updatePreviewEdit();
   $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order).map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");
   $("e-kode").value=r.kode;
   $("modal").classList.add("show");
@@ -578,10 +837,34 @@ function mainTap(id){
   if(r&&r._pending){setStatus("Venter på forbindelse — kan rettes når den er synkroniseret","err");return;}
   openEdit(id);
 }
-function closeModal(){$("modal").classList.remove("show");editingId=null;}
+function closeModal(){$("modal").classList.remove("show");editingId=null;closeCalc("edit");}
+
+// --- Kategori-drilldown (tryk på en kasse for at se dens udgifter) ---
+function openDrill(kode){
+  const view=kasserView;
+  const list=rows.filter(r=>!pendingDeletes.has(r.id)&&r.kode===kode&&(view==="Begge"||r.hvem===view))
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("drill-title").textContent=icon(kode)+" "+label(kode);
+  if(!list.length){
+    $("drill-list").innerHTML='<div class="muted">Ingen udgifter i denne kategori endnu.</div>';
+  }else{
+    const total=list.reduce((a,r)=>a+Number(r.belob_dkk||0),0);
+    $("drill-list").innerHTML=list.map(r=>{
+      const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
+      const t=(r.beskrivelse||label(r.kode)).replace(/</g,"&lt;");
+      const pendingTag=r._pending?' <span class="muted">· ⏳ afventer sync</span>':"";
+      return '<div class="logrow"><div class="main"><div class="t">'+(view==="Begge"?"["+r.hvem+"] ":"")+t+'</div><div class="d">'+(r.dato||"")+orig+pendingTag+'</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div></div>';
+    }).join("")+'<div class="tot"><span>I alt</span><span>'+kr(total)+'</span></div>';
+  }
+  $("drill").classList.add("show");
+  const sheet=document.querySelector("#drill .sheet");
+  sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
+}
+function closeDrill(){$("drill").classList.remove("show");}
+
 async function saveEdit(){
-  const belob=parseFloat($("e-belob").value);
-  if(!(belob>0)){setStatus("Beløb skal være større end 0","err");return;}
+  const belob=getCalcValue("edit");
+  if(!(belob>0)){openCalc("edit");setStatus("Beløb skal være større end 0","err");return;}
   const val=$("e-valuta").value;
   const patch={beskrivelse:$("e-besk").value.trim()||null,belob:belob,valuta:val,rate_used:rates[val],kode:$("e-kode").value,hvem:$("e-hvem").value};
   setStatus("Gemmer…","sync",true);
@@ -589,7 +872,7 @@ async function saveEdit(){
     const data=await api("/expenses?id=eq."+editingId,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
     const i=rows.findIndex(x=>x.id===editingId);if(i>=0)rows[i]=data[0];
     saveCacheToStorage();
-    closeModal();setStatus("Rettet ✓","ok");render();
+    closeModal();setStatus("Rettet ✓","ok");haptic(10);render();
   }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
 }
 function delExpense(id,ev){
@@ -597,15 +880,16 @@ function delExpense(id,ev){
   if(pendingDeletes.has(id))return;
   const r=rows.find(x=>x.id===id);if(!r)return;
   if(r._pending){
-    // Ligger kun i den lokale offline-kø endnu — fjern direkte, intet at slette på serveren
     rows=rows.filter(x=>x.id!==id);
     savePendingQueue(loadPendingQueue().filter(x=>x.id!==id));
     saveCacheToStorage();
     setStatus("Fjernet fra offline-køen","ok");
+    haptic(10);
     render();
     return;
   }
   pendingDeletes.add(id);render();
+  haptic(10);
   showUndoToast(r);
 }
 function showUndoToast(r){
@@ -628,6 +912,7 @@ function undoDelete(id){
   clearTimeout(toastTimers[id]);delete toastTimers[id];
   pendingDeletes.delete(id);
   removeToastEl(id);
+  haptic(8);
   render();
 }
 async function commitDelete(id){
@@ -662,6 +947,94 @@ async function fetchLiveRates(){
     setStatus('Kurser hentet — tjek og tryk "Gem kurser"',"ok",true);
   }catch(err){setStatus("Kunne ikke hente kurser: "+(err.message||err),"err",true);}
 }
+// --- Delt indkøbs- & huskeliste ---
+function renderChecklist(){
+  const el=$("checklist");if(!el)return;
+  if(!checklist.length){el.innerHTML='<div class="muted">Ingen punkter endnu.</div>';return;}
+  const sorted=checklist.slice().sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  el.innerHTML=sorted.map(item=>{
+    const t=(item.tekst||"").replace(/</g,"&lt;");
+    return '<div class="cl-row" data-id="'+item.id+'">'+
+      '<div class="cl-main" onclick="toggleChecklistItem(\''+item.id+'\')">'+
+        '<span class="cl-check" aria-hidden="true">'+(item.done?"✅":"⬜")+'</span>'+
+        '<span class="cl-text'+(item.done?" done":"")+'">'+t+'</span>'+
+        (item.hvem?'<span class="cl-who">· '+item.hvem+'</span>':"")+
+      '</div>'+
+      '<button class="del" onclick="delChecklistItem(\''+item.id+'\',event)" aria-label="Slet punkt">×</button>'+
+    '</div>';
+  }).join("");
+}
+async function addChecklistItem(){
+  const inp=$("cl-input");const t=inp.value.trim();
+  if(!t){setStatus("Skriv et punkt først","err");return;}
+  if(!navigator.onLine){setStatus("Ingen forbindelse – prøv igen når du er online","err",true);return;}
+  setStatus("Tilføjer…","sync",true);
+  try{
+    const data=await api("/checklist",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({tekst:t,hvem:who,done:false})});
+    checklist.unshift(data[0]);inp.value="";saveCacheToStorage();setStatus("Tilføjet ✓","ok");haptic(10);renderChecklist();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+async function toggleChecklistItem(id){
+  const item=checklist.find(x=>x.id===id);if(!item)return;
+  const newDone=!item.done;
+  item.done=newDone;renderChecklist();haptic(8);
+  try{
+    await api("/checklist?id=eq."+id,{method:"PATCH",body:JSON.stringify({done:newDone})});
+    saveCacheToStorage();
+  }catch(err){
+    item.done=!newDone;renderChecklist();setStatus("Kunne ikke opdatere: "+(err.message||err),"err",true);
+  }
+}
+async function delChecklistItem(id,ev){
+  if(ev)ev.stopPropagation();
+  try{
+    await api("/checklist?id=eq."+id,{method:"DELETE"});
+    checklist=checklist.filter(x=>x.id!==id);saveCacheToStorage();haptic(10);renderChecklist();
+  }catch(err){setStatus("Kunne ikke slette: "+(err.message||err),"err",true);}
+}
+// --- Dags-/uge-overblik (Kasser-fanen) ---
+function computePeriodTotals(view){
+  const todayStr=new Date().toISOString().slice(0,10);
+  const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
+  const weekStr=weekAgo.toISOString().slice(0,10);
+  let today=0,week=0;
+  rows.forEach(r=>{
+    if(pendingDeletes.has(r.id)||!r.dato)return;
+    if(view!=="Begge"&&r.hvem!==view)return;
+    const amt=Number(r.belob_dkk||0);
+    if(r.dato===todayStr)today+=amt;
+    if(r.dato>=weekStr&&r.dato<=todayStr)week+=amt;
+  });
+  return {today,week};
+}
+// --- Indsigt: dyreste dag / størst kategori ---
+function renderInsight(){
+  const el=$("insight");if(!el)return;
+  const byDay={};
+  rows.forEach(r=>{
+    if(pendingDeletes.has(r.id)||!r.dato)return;
+    byDay[r.dato]=(byDay[r.dato]||0)+Number(r.belob_dkk||0);
+  });
+  const dayEntries=Object.entries(byDay).sort((a,b)=>b[1]-a[1]);
+  let dayHtml='<div class="forecast-row"><span class="l">Dyreste dag</span><span class="v muted">Ingen data endnu</span></div>';
+  if(dayEntries.length){
+    const [d,amt]=dayEntries[0];
+    dayHtml='<div class="forecast-row"><span class="l">Dyreste dag ('+d+')</span><span class="v">'+kr(amt)+'</span></div>';
+  }
+  const spent=spentByView("Begge");
+  const catEntries=Object.entries(spent).sort((a,b)=>b[1]-a[1]);
+  let catHtml='<div class="forecast-row"><span class="l">Størst kategori</span><span class="v muted">Ingen data endnu</span></div>';
+  if(catEntries.length){
+    const [kode,amt]=catEntries[0];
+    const total=catEntries.reduce((a,[,v])=>a+v,0);
+    const pct=total?Math.round(amt/total*100):0;
+    catHtml='<div class="forecast-row"><span class="l">Størst kategori</span><span class="v">'+icon(kode)+' '+label(kode)+' · '+kr(amt)+' ('+pct+'%)</span></div>';
+  }
+  el.innerHTML=dayHtml+catHtml;
+}
 function spentByKode(w){const m={};rows.filter(r=>r.hvem===w&&!pendingDeletes.has(r.id)).forEach(r=>{m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
 function spentByView(v){
   if(v==="Begge"){const m={};rows.forEach(r=>{if(pendingDeletes.has(r.id))return;m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
@@ -682,12 +1055,68 @@ function animateNumber(el,to){
   }
   requestAnimationFrame(step);
 }
+// --- Forbrugsprognose ---
+function renderForecast(){
+  const el=$("forecast");if(!el)return;
+  const cList=catsForView("Begge"),spent=spentByView("Begge");
+  const totalBudget=cList.reduce((a,c)=>a+budgetOfView(c,"Begge"),0);
+  const totalSpent=Object.values(spent).reduce((a,b)=>a+b,0);
+  const d=loadTripDates();
+  const today=new Date();today.setHours(0,0,0,0);
+  const dAf=new Date(d.afrejse+"T00:00:00"),dHj=new Date(d.hjem+"T00:00:00");
+  const dayMs=86400000;
+  const tripDays=Math.max(1,Math.round((dHj-dAf)/dayMs)+1);
+  const elapsed=Math.round((today-dAf)/dayMs)+1;
+  const planDaily=totalBudget/tripDays;
+  let rows2='<div class="forecast-row"><span class="l">Planlagt budget/dag</span><span class="v">'+kr(planDaily)+'</span></div>';
+  if(elapsed<1){
+    rows2+='<div class="forecast-row"><span class="l">Status</span><span class="v muted">Rejsen er ikke startet endnu</span></div>';
+  }else if(totalSpent<=0){
+    rows2+='<div class="forecast-row"><span class="l">Status</span><span class="v muted">Ingen udgifter registreret endnu</span></div>';
+  }else{
+    const daysSoFar=Math.min(elapsed,tripDays);
+    const actualDaily=totalSpent/daysSoFar;
+    const projected=actualDaily*tripDays;
+    const diff=projected-totalBudget;
+    const cls=diff>0?"over":"under";
+    rows2+='<div class="forecast-row"><span class="l">Jeres faktiske forbrug/dag</span><span class="v">'+kr(actualDaily)+'</span></div>';
+    rows2+='<div class="forecast-row"><span class="l">Forventet total ved rejsens slut</span><span class="v forecast-v '+cls+'">'+kr(projected)+'</span></div>';
+    rows2+='<div class="forecast-row"><span class="l">'+(diff>0?"Over budget med":"Under budget med")+'</span><span class="v forecast-v '+cls+'">'+kr(Math.abs(diff))+'</span></div>';
+  }
+  el.innerHTML=rows2;
+}
+// --- Fordelingsgraf (SVG-donut, sektioner: Japan/Australien/Shopping) ---
+function renderDonut(){
+  const el=$("donut");if(!el)return;
+  const spent=spentByView("Begge");
+  const bySek={};
+  cats.forEach(c=>{const sp=spent[c.kode]||0;if(sp>0)bySek[c.sektion]=(bySek[c.sektion]||0)+sp;});
+  const sektioner=Object.keys(bySek);
+  const total=sektioner.reduce((a,s)=>a+bySek[s],0);
+  if(!total){el.innerHTML='<div class="muted">Ingen udgifter at vise endnu.</div>';return;}
+  const R=52,C=2*Math.PI*R,CX=64,CY=64;
+  let offset=0,segs="",legend="";
+  sektioner.forEach(sek=>{
+    const val=bySek[sek],frac=val/total,len=frac*C;
+    const color=SEKTION_COLOR[sek]||"#64798c";
+    segs+='<circle class="donut-seg" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="16" '+
+      'stroke-dasharray="'+len.toFixed(1)+' '+(C-len).toFixed(1)+'" stroke-dashoffset="'+(-offset).toFixed(1)+'" transform="rotate(-90 '+CX+' '+CY+')"/>';
+    offset+=len;
+    legend+='<div class="li"><span class="dot" style="background:'+color+'"></span>'+sek+' · '+kr(val)+' ('+Math.round(frac*100)+'%)</div>';
+  });
+  el.innerHTML='<div class="donut-wrap">'+
+    '<svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Fordeling af forbrug pr. rejsedel">'+
+      '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#e7eef5" stroke-width="16"/>'+segs+
+    '</svg>'+
+    '<div class="donut-legend">'+legend+'</div>'+
+  '</div>';
+}
 // --- Swipe-til-slet på log-rækker (pointer events, virker med touch og mus) ---
 function makeSwipeable(rowEl,id){
-  let startX=0,startY=0,dx=0,dragging=false,decided=false,isHoriz=false;
+  let startX=0,startY=0,dx=0,dragging=false,decided=false,isHoriz=false,hapticFired=false;
   rowEl.addEventListener("pointerdown",e=>{
     if(e.target.closest(".del"))return;
-    dragging=true;decided=false;isHoriz=false;dx=0;
+    dragging=true;decided=false;isHoriz=false;dx=0;hapticFired=false;
     startX=e.clientX;startY=e.clientY;
     try{rowEl.setPointerCapture(e.pointerId);}catch(err){}
     rowEl.style.transition="none";
@@ -701,6 +1130,8 @@ function makeSwipeable(rowEl,id){
     }
     if(!isHoriz)return;
     dx=Math.min(0,ddx);
+    if(dx<-90&&!hapticFired){hapticFired=true;haptic(10);}
+    if(dx>-90)hapticFired=false;
     rowEl.style.transform="translateX("+dx+"px)";
     rowEl.style.opacity=String(Math.max(.25,1+dx/200));
   });
@@ -723,6 +1154,9 @@ function render(){
   if(!loaded)return;
   const enteringNow=justEnteredTab;justEnteredTab=false;
   if(tab==="kasser"){
+    const pt=computePeriodTotals(kasserView);
+    animateNumber($("pd-today"),pt.today);
+    animateNumber($("pd-week"),pt.week);
     const list=catsForView(kasserView),spent=spentByView(kasserView);
     let totB=0,totS=0,html="",lastSek="",i=0;
     list.forEach(c=>{
@@ -731,7 +1165,7 @@ function render(){
       if(c.sektion!==lastSek){html+='<div class="sekhd">'+c.sektion+'</div>';lastSek=c.sektion;}
       const rowCls="kasse"+(enteringNow?" row-in":"");
       const delay=enteringNow?(Math.min(i,10)*30):0;i++;
-      html+='<div class="'+rowCls+'" style="animation-delay:'+delay+'ms"><div class="top"><div>'+icon(c.kode)+' '+c.label+'</div><div class="amt">'+kr(sp)+' <span class="muted">/ '+kr(bud)+'</span></div></div><div class="bar '+cls+'"><span style="width:'+pct+'%"></span></div></div>';
+      html+='<div class="'+rowCls+'" style="animation-delay:'+delay+'ms" onclick="openDrill(\''+c.kode+'\')"><div class="top"><div>'+icon(c.kode)+' '+c.label+'</div><div class="amt">'+kr(sp)+' <span class="muted">/ '+kr(bud)+'</span></div></div><div class="bar '+cls+'"><span style="width:'+pct+'%"></span></div></div>';
     });
     html+='<div class="tot"><span>Rejse + shopping i alt</span><span>'+kr(totS)+' / '+kr(totB)+'</span></div>';
     $("kasser").innerHTML=html;
@@ -746,7 +1180,7 @@ function render(){
       const rowCls="logrow"+(enteringNow?" row-in":"");
       const delay=enteringNow?(Math.min(i,10)*30):0;
       const pendingTag=r._pending?' <span class="muted">· ⏳ afventer sync</span>':"";
-      return '<div class="'+rowCls+'" data-id="'+r.id+'" style="animation-delay:'+delay+'ms"><div class="main" onclick="mainTap(\''+r.id+'\')"><div class="t">'+icon(r.kode)+' '+t+'</div><div class="d">'+(r.dato||"")+' · '+label(r.kode)+orig+pendingTag+'</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div><button class="del" onclick="delExpense(\''+r.id+'\',event)">×</button></div>';
+      return '<div class="'+rowCls+'" data-id="'+r.id+'" style="animation-delay:'+delay+'ms"><div class="main" onclick="mainTap(\''+r.id+'\')"><div class="t">'+icon(r.kode)+' '+t+'</div><div class="d">'+(r.dato||"")+' · '+label(r.kode)+orig+pendingTag+'</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div><button class="del" onclick="delExpense(\''+r.id+'\',event)" aria-label="Slet udgift">×</button></div>';
     }).join("");
     document.querySelectorAll("#log .logrow").forEach(el=>makeSwipeable(el,el.dataset.id));
   }
@@ -756,6 +1190,10 @@ function render(){
     animateNumber($("ov-jakob"),sj);
     animateNumber($("ov-frida"),sf);
     animateNumber($("ov-par"),sj+sf);
+    renderChecklist();
+    renderForecast();
+    renderDonut();
+    renderInsight();
   }
 }
 function exportCSV(){
@@ -766,21 +1204,21 @@ function exportCSV(){
     navigator.clipboard.writeText(csv).then(()=>setStatus("Kopieret ✓ – indsæt i Excel","ok"),()=>prompt("Kopiér manuelt:",csv));
   }else prompt("Kopiér manuelt:",csv);
 }
-$("f-belob").addEventListener("input",updatePreview);
 $("f-valuta").addEventListener("change",updatePreview);
+$("e-valuta").addEventListener("change",updatePreviewEdit);
 $("log-search").addEventListener("input",e=>{searchQuery=e.target.value.trim().toLowerCase();render();});
 window.addEventListener("online",()=>{setStatus("Online igen – opdaterer…","sync",true);flushPendingQueue().then(()=>loadAll());});
 window.addEventListener("offline",()=>setStatus("Offline – nye udgifter gemmes lokalt og synces automatisk","err",true));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&loaded){flushPendingQueue();loadAll(true);}});
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
-}
 window.addEventListener("resize",()=>{
   if($("app").style.display!=="block")return;
   initIndicator($("whobar"),who==="Jakob"?$("w-jakob"):$("w-frida"));
   initIndicator($("tabsbar"),$("t-"+tab));
   initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));
 });
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
 // let poll så Frida og Jakob ser hinandens ændringer, og prøv løbende at sende offline-køen
 pollTimer=setInterval(()=>{
   if(loaded&&!document.hidden&&!$("modal").classList.contains("show")){
@@ -793,6 +1231,7 @@ const hadCache=loadCacheFromStorage();
 if(hadCache)mergePendingIntoRows();
 loadAll(hadCache);
 if(navigator.onLine)flushPendingQueue();
+if(new URLSearchParams(location.search).get("who"))enterApp();
 </script>
 </body>
 </html>
