@@ -197,7 +197,12 @@
   .amt-wrap input{cursor:pointer;padding-right:34px}
   .amt-wrap .amt-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;
     font-size:15px;opacity:.55}
-  .calc-panel{max-height:0;overflow:hidden;transition:max-height 260ms var(--ease-out-quint);margin-top:8px}
+  .calc-fixed{position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--card);
+    border-top:1px solid var(--line);border-radius:16px 16px 0 0;
+    box-shadow:0 -10px 30px rgba(21,42,61,.16);max-width:640px;margin:0 auto;
+    padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    transform:translateY(105%);transition:transform 260ms var(--ease-out-quint)}
+  .calc-fixed.open{transform:translateY(0)}
   .calc-toprow{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-top:4px}
   .calc-ops{display:flex;gap:6px;flex:1}
   .calc-btn{padding:14px 0;border:none;border-radius:10px;background:var(--card2);color:var(--ink);
@@ -254,32 +259,6 @@
       </div>
     </div>
     <div><label>Valuta</label><select id="f-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
-  </div>
-  <div class="calc-panel" id="calc-panel">
-    <div class="calc-toprow">
-      <div class="calc-ops">
-        <button type="button" class="calc-btn op" onclick="calcPress('add','+')" aria-label="Plus">+</button>
-        <button type="button" class="calc-btn op" onclick="calcPress('add','-')" aria-label="Minus">−</button>
-        <button type="button" class="calc-btn op" onclick="calcPress('add','*')" aria-label="Gange">×</button>
-        <button type="button" class="calc-btn op" onclick="calcPress('add','/')" aria-label="Division">÷</button>
-      </div>
-      <button type="button" class="calc-clear" onclick="calcPress('add','C')">Ryd</button>
-    </div>
-    <div class="calc-grid">
-      <button type="button" class="calc-btn" onclick="calcPress('add','1')">1</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','2')">2</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','3')">3</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','4')">4</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','5')">5</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','6')">6</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','7')">7</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','8')">8</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','9')">9</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','.')">,</button>
-      <button type="button" class="calc-btn" onclick="calcPress('add','0')">0</button>
-      <button type="button" class="calc-btn back" onclick="calcPress('add','back')" aria-label="Slet sidste tegn">⌫</button>
-    </div>
-    <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc('add')">Færdig</button>
   </div>
   <label>Kategori</label>
   <select id="f-kode"></select>
@@ -385,32 +364,6 @@
       <div><label>Valuta</label><select id="e-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
     </div>
     <div id="e-preview" class="sub" style="margin:4px 0 0"></div>
-    <div class="calc-panel" id="calc-panel-edit">
-      <div class="calc-toprow">
-        <div class="calc-ops">
-          <button type="button" class="calc-btn op" onclick="calcPress('edit','+')" aria-label="Plus">+</button>
-          <button type="button" class="calc-btn op" onclick="calcPress('edit','-')" aria-label="Minus">−</button>
-          <button type="button" class="calc-btn op" onclick="calcPress('edit','*')" aria-label="Gange">×</button>
-          <button type="button" class="calc-btn op" onclick="calcPress('edit','/')" aria-label="Division">÷</button>
-        </div>
-        <button type="button" class="calc-clear" onclick="calcPress('edit','C')">Ryd</button>
-      </div>
-      <div class="calc-grid">
-        <button type="button" class="calc-btn" onclick="calcPress('edit','1')">1</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','2')">2</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','3')">3</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','4')">4</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','5')">5</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','6')">6</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','7')">7</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','8')">8</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','9')">9</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','.')">,</button>
-        <button type="button" class="calc-btn" onclick="calcPress('edit','0')">0</button>
-        <button type="button" class="calc-btn back" onclick="calcPress('edit','back')" aria-label="Slet sidste tegn">⌫</button>
-      </div>
-      <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc('edit')">Færdig</button>
-    </div>
     <label>Kategori</label>
     <select id="e-kode"></select>
     <label>Person</label>
@@ -424,6 +377,32 @@
     <div class="hd"><span id="drill-title">Kategori</span><button class="refresh" onclick="closeDrill()" aria-label="Luk">Luk</button></div>
     <div id="drill-list"></div>
   </div>
+</div>
+<div class="calc-fixed" id="calc-fixed">
+  <div class="calc-toprow">
+    <div class="calc-ops">
+      <button type="button" class="calc-btn op" onclick="calcPress('+')" aria-label="Plus">+</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('-')" aria-label="Minus">−</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('*')" aria-label="Gange">×</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('/')" aria-label="Division">÷</button>
+    </div>
+    <button type="button" class="calc-clear" onclick="calcPress('C')">Ryd</button>
+  </div>
+  <div class="calc-grid">
+    <button type="button" class="calc-btn" onclick="calcPress('1')">1</button>
+    <button type="button" class="calc-btn" onclick="calcPress('2')">2</button>
+    <button type="button" class="calc-btn" onclick="calcPress('3')">3</button>
+    <button type="button" class="calc-btn" onclick="calcPress('4')">4</button>
+    <button type="button" class="calc-btn" onclick="calcPress('5')">5</button>
+    <button type="button" class="calc-btn" onclick="calcPress('6')">6</button>
+    <button type="button" class="calc-btn" onclick="calcPress('7')">7</button>
+    <button type="button" class="calc-btn" onclick="calcPress('8')">8</button>
+    <button type="button" class="calc-btn" onclick="calcPress('9')">9</button>
+    <button type="button" class="calc-btn" onclick="calcPress('.')">,</button>
+    <button type="button" class="calc-btn" onclick="calcPress('0')">0</button>
+    <button type="button" class="calc-btn back" onclick="calcPress('back')" aria-label="Slet sidste tegn">⌫</button>
+  </div>
+  <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc()">Færdig</button>
 </div>
 <div id="toasts" class="toasts"></div>
 </div>
@@ -491,7 +470,9 @@ function updatePreviewEdit(){const b=getCalcValue("edit"),v=$("e-valuta").value;
   el.textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";}
 
 // --- Regnemaskine-taltastatur til beløbsfelter (Tilføj + Ret udgift), ala MobilePay ---
+// Ét delt panel, fastgjort i bunden af skærmen som et tastatur, uanset scroll-position.
 let calcState={add:{expr:"",justEval:false},edit:{expr:"",justEval:false}};
+let activeCalcCtx=null;
 function calcFormatNum(n){
   if(!isFinite(n))return "0";
   return String(Math.round(n*10000)/10000);
@@ -525,7 +506,8 @@ function calcRender(ctx){
   const field=$(ctx==="add"?"f-belob":"e-belob");
   if(field)field.value=st.expr?calcDisplayExpr(st.expr):"";
 }
-function calcPress(ctx,key){
+function calcPress(key){
+  const ctx=activeCalcCtx;if(!ctx)return;
   const st=calcState[ctx];
   const isOp=k=>["+","-","*","/"].includes(k);
   if(key==="C"){
@@ -555,18 +537,21 @@ function calcPress(ctx,key){
   haptic(6);
   if(ctx==="add")updatePreview();else updatePreviewEdit();
 }
+// Åbner det fælles bundpanel for beløbsfeltet i "add" (Tilføj) eller "edit" (Ret udgift).
 function openCalc(ctx){
-  closeCalc(ctx==="add"?"edit":"add");
-  const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
-  if(!panel||panel.classList.contains("open"))return;
-  panel.classList.add("open");
-  panel.style.maxHeight=panel.scrollHeight+"px";
+  activeCalcCtx=ctx;
+  calcRender(ctx);
+  const panel=$("calc-fixed");
+  if(panel)panel.classList.add("open");
 }
+// Uden argument: luk panelet uanset hvilken kontekst der er aktiv (fx "Færdig"-knappen).
+// Med argument: luk kun hvis den angivne kontekst rent faktisk er den aktive (undgår at
+// nulstilling af "add" ved en vellykket tilføjelse lukker et åbent "edit"-panel osv.).
 function closeCalc(ctx){
-  const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
-  if(!panel)return;
-  panel.classList.remove("open");
-  panel.style.maxHeight="0px";
+  if(ctx&&activeCalcCtx!==ctx)return;
+  const panel=$("calc-fixed");
+  if(panel)panel.classList.remove("open");
+  activeCalcCtx=null;
 }
 function resetCalc(ctx){
   calcState[ctx]={expr:"",justEval:false};
@@ -574,13 +559,11 @@ function resetCalc(ctx){
   closeCalc(ctx);
 }
 document.addEventListener("click",e=>{
-  ["add","edit"].forEach(ctx=>{
-    const panel=$(ctx==="add"?"calc-panel":"calc-panel-edit");
-    const field=$(ctx==="add"?"f-belob":"e-belob");
-    if(panel&&panel.classList.contains("open")&&!panel.contains(e.target)&&e.target!==field){
-      closeCalc(ctx);
-    }
-  });
+  const panel=$("calc-fixed");
+  if(!panel||!panel.classList.contains("open"))return;
+  if(panel.contains(e.target))return;
+  if(e.target===$("f-belob")||e.target===$("e-belob"))return;
+  closeCalc();
 });
 
 // --- Startskærm ---
@@ -824,7 +807,7 @@ function queueOffline(rec,btn){
 function openEdit(id){const r=rows.find(x=>x.id===id);if(!r)return;editingId=id;
   $("e-besk").value=r.beskrivelse||"";$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
   calcState.edit={expr:calcFormatNum(Number(r.belob)),justEval:false};
-  closeCalc("edit");calcRender("edit");updatePreviewEdit();
+  closeCalc();calcRender("edit");updatePreviewEdit();
   $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order).map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+c.label+'</option>').join("");
   $("e-kode").value=r.kode;
   $("modal").classList.add("show");
