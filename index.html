@@ -299,6 +299,15 @@
   .calc-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
     font-size:12px;padding:8px 12px;cursor:pointer;flex:none}
   .calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+
+  /* --- Kvittering-scan --- */
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .mini-seg{display:flex;gap:6px;margin-top:4px}
+  .mini-seg button{flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--line);background:#fbfdff;color:var(--muted);
+    font-size:12px;font-weight:600;cursor:pointer;transition:transform 100ms var(--ease-out-cubic)}
+  .mini-seg button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+  .mini-seg button:active{transform:scale(.96)}
 </style>
 </head>
 <body>
@@ -398,6 +407,11 @@
       </div>
     </div>
     <div class="card">
+      <div class="hd">Balance</div>
+      <div id="balance-line" style="font-size:15px;font-weight:600">–</div>
+      <div class="muted" style="font-size:12px;margin-top:4px">Beregnet ud fra scannede kvitteringer hvor en af jer har lagt ud for den anden.</div>
+    </div>
+    <div class="card">
       <div class="hd"><span>Ugerapport</span><span class="muted" id="week-label" style="text-transform:none;letter-spacing:0;font-weight:600"></span></div>
       <div class="week" id="week-chart"></div>
       <div id="week-sum" style="margin-top:8px"></div>
@@ -490,6 +504,7 @@
     </div>
     <input id="f-besk" placeholder="Beskrivelse (valgfri)" maxlength="120">
     <div id="f-chips" class="chips"></div>
+    <button type="button" class="btn ghost" onclick="$('receipt-file').click()">📷 Scan kvittering i stedet</button>
     <div id="a-status" class="status" role="status" aria-live="polite"></div>
   </div>
   <div class="calc" style="margin-top:auto">
@@ -523,6 +538,18 @@
       </svg>
     </button>
   </div>
+</div>
+
+<input type="file" id="receipt-file" accept="image/*" capture="environment" style="display:none" onchange="handleReceiptFile(this.files[0])">
+
+<!-- ---------- KVITTERING (scan) ---------- -->
+<div id="screen-receipt" class="screen">
+  <div class="topbar">
+    <button class="refresh" onclick="closeReceiptScreen()">Annullér</button>
+    <div class="hd" style="margin:0">Kvittering</div>
+    <span style="width:64px"></span>
+  </div>
+  <div id="receipt-body" style="padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;flex:1"></div>
 </div>
 
 <!-- ---------- RET UDGIFT ---------- -->
@@ -638,6 +665,7 @@ function lastKodeKey(w){return "rejsebudget_last_kode_"+w;}
 let who="Jakob",tab="hjem",kasserView="Jakob",logView="Mine",searchQuery="",justEnteredTab=true,justSwiped=false;
 let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40},checklist=[];
 let editingId=null,editingKode=null,addKode=null,addCurrency="DKK",loaded=false,pollTimer=null;
+let receiptState=null;
 let pendingDeletes=new Set(),toastTimers={};
 const $=id=>document.getElementById(id);
 const kr=n=>Math.round(n).toLocaleString("da-DK")+" kr";
@@ -781,6 +809,229 @@ function setCurrency(v){
   document.querySelectorAll("#cur-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
   moveIndicator($("cur-seg"),document.querySelector('#cur-seg button[data-v="'+v+'"]'));
   renderAmount();
+}
+
+/* --- Kvittering-scan --- */
+function compressImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Kunne ikke læse billedet"));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("Ugyldigt billede"));
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxDim||h>maxDim){
+          if(w>=h){h=Math.round(h*maxDim/w);w=maxDim;}else{w=Math.round(w*maxDim/h);h=maxDim;}
+        }
+        const canvas=document.createElement("canvas");
+        canvas.width=w;canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve({base64:canvas.toDataURL("image/jpeg",quality).split(",")[1],mimeType:"image/jpeg"});
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function blankReceiptItem(){return {description:"",amount:0,owedBy:null,kode:null};}
+async function handleReceiptFile(file){
+  if(!file)return;
+  $("receipt-file").value="";
+  if(!navigator.onLine){
+    setStatus("Ingen forbindelse — scanning kræver internet. Tilføj udgiften manuelt i stedet.","err",true);
+    return;
+  }
+  closeAdd();
+  receiptState={loading:true,error:null,merchant:"",currency:"DKK",total:0,paidBy:who,items:[]};
+  $("screen-receipt").classList.add("show");
+  document.body.style.overflow="hidden";
+  renderReceiptScreen();
+  try{
+    const img=await compressImage(file,1400,0.82);
+    const res=await fetch(SUPABASE_URL+"/functions/v1/parse-receipt",{
+      method:"POST",
+      headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({image:img.base64,mimeType:img.mimeType})
+    });
+    const data=await res.json().catch(()=>null);
+    if(!res.ok||!data||data.error)throw new Error((data&&data.error)||("Fejl "+res.status));
+    receiptState.merchant=data.merchant||"";
+    receiptState.currency=["DKK","JPY","AUD"].includes(data.currency)?data.currency:"DKK";
+    receiptState.total=Number(data.total)||0;
+    receiptState.items=(Array.isArray(data.items)?data.items:[]).map(it=>({
+      description:it.description||"",amount:Number(it.amount)||0,owedBy:null,kode:null}));
+    if(!receiptState.items.length){
+      receiptState.error="Fandt ingen enkeltvarer på kvitteringen — tilføj dem manuelt.";
+      receiptState.items=[blankReceiptItem()];
+    }
+  }catch(err){
+    receiptState.error="Kunne ikke læse kvitteringen ("+(err.message||err)+") — tilføj punkter manuelt.";
+    if(!receiptState.items.length)receiptState.items=[blankReceiptItem()];
+  }
+  receiptState.loading=false;
+  renderReceiptScreen();
+}
+function closeReceiptScreen(){
+  $("screen-receipt").classList.remove("show");
+  document.body.style.overflow="";
+  receiptState=null;
+}
+function setReceiptCurrency(c){if(!receiptState)return;receiptState.currency=c;renderReceiptScreen();}
+function setReceiptPaidBy(w){if(!receiptState)return;receiptState.paidBy=w;renderReceiptScreen();}
+function setReceiptItemOwed(i,w){
+  const it=receiptState&&receiptState.items[i];if(!it)return;
+  it.owedBy=w;
+  const scope=(w==="Jakob"||w==="Frida")?w:"Begge";
+  if(it.kode&&!catsForView(scope).some(c=>c.kode===it.kode))it.kode=null;
+  renderReceiptScreen();
+}
+function setReceiptItemKode(i,kode){
+  const it=receiptState&&receiptState.items[i];if(!it)return;
+  it.kode=kode;renderReceiptScreen();
+}
+function updateReceiptItem(i,field,value){
+  const it=receiptState&&receiptState.items[i];if(!it)return;
+  it[field]=field==="amount"?Number(value):value;
+  renderReceiptSummary();
+}
+function addReceiptItem(){if(!receiptState)return;receiptState.items.push(blankReceiptItem());renderReceiptScreen();}
+function removeReceiptItem(i){
+  if(!receiptState)return;
+  receiptState.items.splice(i,1);
+  if(!receiptState.items.length)receiptState.items.push(blankReceiptItem());
+  renderReceiptScreen();
+}
+function receiptItemHtml(it,i){
+  const scope=(it.owedBy==="Jakob"||it.owedBy==="Frida")?it.owedBy:"Begge";
+  const cats2=catsForView(scope);
+  const chips=cats2.map(c=>'<button type="button" class="chip'+(c.kode===it.kode?" active":"")+'" onclick="setReceiptItemKode('+i+',\''+c.kode+'\')">'+
+    icon(c.kode)+' '+esc(c.label)+'</button>').join("");
+  return '<div class="card">'+
+    '<div class="row" style="align-items:flex-end">'+
+      '<div style="flex:3"><label>Beskrivelse</label><input value="'+esc(it.description)+'" maxlength="120" placeholder="Fx Ramen" oninput="updateReceiptItem('+i+',\'description\',this.value)"></div>'+
+      '<div style="flex:1"><label>Beløb</label><input type="number" step="0.01" min="0" value="'+(it.amount||"")+'" oninput="updateReceiptItem('+i+',\'amount\',this.value)"></div>'+
+    '</div>'+
+    '<label style="margin-top:8px">Hvem</label>'+
+    '<div class="mini-seg">'+["Jakob","Begge","Frida"].map(w=>
+      '<button type="button" class="'+(it.owedBy===w?"active":"")+'" onclick="setReceiptItemOwed('+i+',\''+w+'\')">'+w+'</button>').join("")+
+    '</div>'+
+    '<label style="margin-top:8px">Kategori</label>'+
+    '<div class="chips">'+(chips||'<span class="muted" style="font-size:12px">Ingen kategorier for '+esc(scope)+'</span>')+'</div>'+
+    '<button type="button" class="del" style="float:right;margin-top:2px" onclick="removeReceiptItem('+i+')" aria-label="Fjern punkt">×</button>'+
+  '</div>';
+}
+function renderReceiptScreen(){
+  const s=receiptState,el=$("receipt-body");
+  if(!s||!el)return;
+  if(s.loading){
+    el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:70px 0">'+
+      '<div class="spinner"></div><div class="muted" style="font-size:14px">Læser kvitteringen…</div></div>';
+    return;
+  }
+  let html="";
+  if(s.error)html+='<div class="status show err">'+esc(s.error)+'</div>';
+  html+='<div class="card">'+
+    '<label>Butik</label><input id="receipt-merchant" value="'+esc(s.merchant||"")+'" maxlength="140" placeholder="Fx 7-Eleven" oninput="receiptState.merchant=this.value">'+
+    (s.total?'<div class="muted" style="font-size:12px;margin-top:6px">Kvitteringens total ifølge foto: '+Number(s.total).toLocaleString("da-DK")+' '+s.currency+'</div>':"")+
+    '<label style="margin-top:10px">Valuta</label>'+
+    '<div class="seg sm" id="receipt-cur-seg"><div class="ind"></div>'+
+      ["DKK","JPY","AUD"].map(c=>'<button type="button" data-v="'+c+'" class="'+(s.currency===c?"active":"")+'" onclick="setReceiptCurrency(\''+c+'\')">'+c+'</button>').join("")+
+    '</div>'+
+    '<label style="margin-top:10px">Betalt af</label>'+
+    '<div class="seg" id="receipt-paid-seg"><div class="ind"></div>'+
+      ["Jakob","Frida"].map(w=>'<button type="button" data-v="'+w+'" class="'+(s.paidBy===w?"active":"")+'" onclick="setReceiptPaidBy(\''+w+'\')">'+w+'</button>').join("")+
+    '</div>'+
+  '</div>';
+  html+=s.items.map((it,i)=>receiptItemHtml(it,i)).join("");
+  html+='<button type="button" class="btn ghost" onclick="addReceiptItem()">+ Tilføj punkt</button>';
+  html+='<div class="card" id="receipt-settlement"></div>';
+  html+='<div id="receipt-status" class="status" role="status" aria-live="polite"></div>';
+  html+='<button type="button" class="btn good" id="receipt-save-btn" onclick="saveReceipt()">Gem</button>';
+  el.innerHTML=html;
+  initIndicator($("receipt-cur-seg"),document.querySelector('#receipt-cur-seg button[data-v="'+s.currency+'"]'));
+  initIndicator($("receipt-paid-seg"),document.querySelector('#receipt-paid-seg button[data-v="'+s.paidBy+'"]'));
+  renderReceiptSummary();
+}
+function renderReceiptSummary(){
+  const s=receiptState;if(!s)return;
+  const rate=rates[s.currency]||1;
+  const valid=s.items.filter(it=>it.amount>0);
+  const allAssigned=valid.length>0&&valid.every(it=>it.owedBy&&it.kode);
+  const btn=$("receipt-save-btn");if(btn)btn.disabled=!allAssigned;
+  const el=$("receipt-settlement");if(!el)return;
+  if(!valid.length){el.innerHTML='<div class="muted" style="font-size:13px">Tilføj mindst ét punkt med et beløb.</div>';return;}
+  let jakobShare=0,fridaShare=0;
+  valid.forEach(it=>{
+    const dkk=it.amount*rate;
+    if(it.owedBy==="Jakob")jakobShare+=dkk;
+    else if(it.owedBy==="Frida")fridaShare+=dkk;
+    else if(it.owedBy==="Begge"){jakobShare+=dkk/2;fridaShare+=dkk/2;}
+  });
+  const oweToPayer=s.paidBy==="Jakob"?fridaShare:jakobShare;
+  let line;
+  if(!allAssigned)line='<span class="muted">Tildel "Hvem" og kategori på alle punkter for at se opgørelsen.</span>';
+  else if(oweToPayer<0.5)line="Ingen skylder for denne kvittering.";
+  else line=(s.paidBy==="Jakob"?"Frida":"Jakob")+" skylder "+s.paidBy+" "+krD(oweToPayer)+" for denne kvittering";
+  el.innerHTML='<div class="hd">Opgørelse</div><div style="font-size:14px">'+line+'</div>'+
+    '<div class="muted" style="font-size:12px;margin-top:4px">'+s.paidBy+" betalte i alt "+krD(jakobShare+fridaShare)+"</div>";
+}
+function showInfoToast(msg){
+  const el=document.createElement("div");
+  el.className="toast";
+  el.innerHTML='<div class="txt">'+esc(msg)+'</div><div class="bar2" style="animation-duration:3000ms"></div>';
+  $("toasts").appendChild(el);
+  setTimeout(()=>{el.classList.add("out");setTimeout(()=>el.remove(),180);},3000);
+}
+async function saveReceipt(){
+  const s=receiptState;if(!s)return;
+  const rate=rates[s.currency]||1;
+  const valid=s.items.filter(it=>it.amount>0&&it.owedBy&&it.kode);
+  if(!valid.length)return;
+  const btn=$("receipt-save-btn");btn.disabled=true;
+  const dato=new Date().toISOString().slice(0,10);
+  const desc=s.merchant?s.merchant.trim():"";
+  const recs=[];
+  valid.forEach(it=>{
+    const itemDesc=(it.description&&it.description.trim())||desc||null;
+    if(it.owedBy==="Begge"){
+      const half=Math.round(it.amount/2*100)/100;
+      ["Jakob","Frida"].forEach(w=>recs.push({
+        dato:dato,beskrivelse:itemDesc,kode:it.kode,belob:half,valuta:s.currency,rate_used:rate,hvem:w,paid_by:s.paidBy}));
+    }else{
+      recs.push({dato:dato,beskrivelse:itemDesc,kode:it.kode,belob:it.amount,valuta:s.currency,rate_used:rate,hvem:it.owedBy,paid_by:s.paidBy});
+    }
+  });
+  try{
+    const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(recs)});
+    rows=data.concat(rows);
+    saveCacheToStorage();
+    haptic(15);
+    closeReceiptScreen();
+    render();
+    showInfoToast(recs.length+" udgifter gemt fra kvittering ✓");
+  }catch(err){
+    const stEl=$("receipt-status");
+    if(stEl){stEl.textContent="Fejl ved gem: "+(err.message||err);stEl.className="status show err";}
+    btn.disabled=false;
+  }
+}
+function settlement(){
+  let net=0;
+  rows.forEach(r=>{
+    if(pendingDeletes.has(r.id))return;
+    if(!r.paid_by||r.paid_by===r.hvem)return;
+    const amt=Number(r.belob_dkk||0);
+    if(r.hvem==="Frida"&&r.paid_by==="Jakob")net+=amt;
+    else if(r.hvem==="Jakob"&&r.paid_by==="Frida")net-=amt;
+  });
+  if(Math.abs(net)<0.5)return null;
+  return net>0?{from:"Frida",to:"Jakob",amountDkk:net}:{from:"Jakob",to:"Frida",amountDkk:-net};
+}
+function renderBalance(){
+  const el=$("balance-line");if(!el)return;
+  const s=settlement();
+  el.textContent=s?(s.from+" skylder "+s.to+" "+krD(s.amountDkk)):"I er kvit ✓";
 }
 
 /* --- Startskærm --- */
@@ -1530,6 +1781,7 @@ function render(){
     animateNumber($("ov-jakob"),sj);
     animateNumber($("ov-frida"),sf);
     animateNumber($("ov-par"),sj+sf);
+    renderBalance();
     renderWeek();
     renderForecast();
     renderDonut();
