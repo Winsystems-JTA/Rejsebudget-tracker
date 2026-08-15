@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rejsebudget – Jakob &amp; Frida</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rejsebudget">
+<style>
+  :root{
+    --bg:#f6f9fc; --card:#ffffff; --card2:#eaf2fb; --line:#d7e3ee; --ink:#152a3d;
+    --muted:#64798c; --accent:#2563eb; --accent2:#4f8ff7; --good:#16a34a; --good2:#34c766;
+    --warn:#d97706; --bad:#dc2626;
+    --good-text:#15803d; --bad-text:#b91c1c; --warn-text:#b45309; --accent-text:#1d4ed8;
+    --nav-h:86px;
+    --ease-out-quint: cubic-bezier(.23,1,.32,1);
+    --ease-out-cubic: cubic-bezier(.33,1,.68,1);
+    --ease-in-cubic: cubic-bezier(.55,.06,.68,.19);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);color:var(--ink);overflow-x:hidden}
+  #app{display:none;max-width:640px;margin:0 auto}
+  button,input,select{font-family:inherit}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)}
+
+  /* --- Topbar --- */
+  .topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px}
+  .topbar h1{font-family:"Times New Roman",Times,serif;font-size:19px;font-weight:400;margin:0;letter-spacing:.2px}
+  .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--muted);
+    font-size:11px;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .avatar{width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+  .pane-wrap{padding:14px 16px calc(var(--nav-h) + 16px);display:flex;flex-direction:column;gap:12px}
+  .pane{animation:paneIn 220ms var(--ease-out-quint)}
+  @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* --- Kort --- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 6px 16px rgba(21,42,61,.06)}
+  .hd{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
+    margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .hd .link{font-size:12px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;
+    background:none;border:none;cursor:pointer;padding:0}
+  label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+  input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
+    background:#fbfdff;color:var(--ink);font-size:16px;transition:border-color 150ms var(--ease-out-cubic)}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  .err-field{border-color:var(--bad)!important}
+  .refresh{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-size:12px;padding:5px 10px;cursor:pointer;transition:transform 100ms var(--ease-out-cubic);flex:none}
+  .refresh:active{transform:scale(.97)}
+
+  /* --- Knapper --- */
+  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;color:#fff;
+    transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic)}
+  .btn.good{background:linear-gradient(135deg,var(--good),var(--good2))}
+  .btn.accent{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn:active{opacity:.85;transform:scale(.99)} .btn:disabled{opacity:.5}
+  .btn.morph-btn{position:relative;overflow:hidden;height:50px;margin:0 auto;padding:0;
+    transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic),
+               width 380ms var(--ease-spring),border-radius 380ms var(--ease-spring)}
+  .btn.morph-btn .btn-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:600;color:#fff;white-space:nowrap;pointer-events:none;
+    transition:opacity 160ms var(--ease-out-cubic),transform 160ms var(--ease-out-cubic)}
+  .btn.morph-btn .btn-check{position:absolute;inset:0;margin:auto;width:22px;height:22px;pointer-events:none;
+    opacity:0;transform:scale(.4) rotate(-20deg);
+    transition:opacity 200ms var(--ease-out-cubic) 160ms,transform 260ms var(--ease-spring) 160ms}
+  .btn.morph-btn.success{width:50px;border-radius:50%}
+  .btn.morph-btn.success .btn-label{opacity:0;transform:scale(.7)}
+  .btn.morph-btn.success .btn-check{opacity:1;transform:scale(1) rotate(0deg)}
+  .btn.morph-btn.success:disabled{opacity:1}
+  .btn-check-mark{stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset 300ms var(--ease-out-cubic) 260ms}
+  .btn.morph-btn.success .btn-check-mark{stroke-dashoffset:0}
+
+  /* --- Segmenterede kontroller --- */
+  .seg{position:relative;display:flex;padding:3px;background:var(--card2);border:1px solid var(--line);border-radius:999px}
+  .seg button{position:relative;z-index:1;flex:1;padding:8px 4px;border:none;background:transparent;
+    color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;border-radius:999px;
+    transition:color 200ms var(--ease-out-cubic),transform 100ms var(--ease-out-cubic)}
+  .seg button.active{color:#fff}
+  .seg button:active{transform:scale(.97)}
+  .seg .ind{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;z-index:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 2px 8px rgba(37,99,235,.25);
+    transition:transform 320ms var(--ease-spring),width 320ms var(--ease-spring)}
+  .seg.sm button{font-size:12px;padding:7px 4px}
+
+  /* --- Bundnavigation --- */
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+    box-shadow:0 -8px 24px rgba(21,42,61,.08);max-width:640px;margin:0 auto;
+    padding:8px 8px calc(14px + env(safe-area-inset-bottom,0px));
+    display:flex;align-items:flex-end;justify-content:space-around}
+  .nav button{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    gap:3px;color:var(--muted);font-size:11px;font-weight:600;padding:6px 0;
+    transition:color 200ms var(--ease-out-cubic),transform 100ms var(--ease-out-cubic)}
+  .nav button .ic{font-size:19px}
+  .nav button.active{color:var(--accent)}
+  .nav button:active{transform:scale(.97)}
+  .nav button.fab{flex:none!important;width:60px;height:60px;border-radius:999px;border:none;padding:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:30px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 4px 4px;
+    box-shadow:0 10px 22px rgba(37,99,235,.35);transition:transform 120ms var(--ease-spring)}
+  .nav button.fab:active{transform:scale(.94)}
+
+  /* --- Dagsbudget-hero --- */
+  .hero{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;padding:16px;color:#fff;
+    box-shadow:0 10px 24px rgba(37,99,235,.22);display:flex;align-items:center;gap:16px}
+  .hero .l{font-size:12px;opacity:.85}
+  .hero .v{font-size:32px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .ring-fg{transition:stroke-dasharray 700ms var(--ease-out-quint)}
+  .totals-grid{display:flex;gap:8px}
+  .totbox{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
+  .totbox .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  .totbox .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .totbox.tint{background:var(--card2);border-color:transparent}
+
+  /* --- Kategorier / kasser --- */
+  .sekhd{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px}
+  .kasse{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;
+    transition:background 150ms var(--ease-out-cubic)}
+  .kasse:last-child{border-bottom:none}
+  .kasse:hover{background:var(--card2)}
+  .ic-box{width:34px;height:34px;border-radius:9px;background:var(--card2);display:flex;align-items:center;
+    justify-content:center;font-size:17px;flex:none}
+  .kasse .body{flex:1;min-width:0}
+  .kasse .top{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+  .kasse .amt{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar{height:6px;background:#e7eef5;border-radius:3px;margin-top:6px;overflow:hidden}
+  .bar>span{display:block;height:100%;background:var(--good);transition:width 420ms var(--ease-spring)}
+  .bar.warn>span{background:var(--warn)} .bar.over>span{background:var(--bad)}
+  .badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px;margin-left:4px;white-space:nowrap}
+  .badge.warn{background:rgba(217,119,6,.12);color:var(--warn-text)}
+  .badge.over{background:rgba(220,38,38,.1);color:var(--bad-text)}
+  .edit-ic{color:var(--muted);font-size:14px;flex:none;background:none;border:none;cursor:pointer;padding:4px}
+  .tot{display:flex;justify-content:space-between;font-weight:700;font-size:16px;
+    padding-top:12px;margin-top:8px;border-top:2px solid var(--line)}
+  .stackbar{height:8px;background:#e7eef5;border-radius:4px;overflow:hidden;display:flex;margin-top:8px}
+  .stackbar>span{display:block;height:100%}
+  .legend{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+  .legend .li{display:flex;align-items:center;gap:5px}
+  .legend .dot{width:9px;height:9px;border-radius:3px}
+
+  /* --- Log --- */
+  .daghd{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 6px}
+  .daghd .d{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .daghd .s{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+  .daycard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;
+    box-shadow:0 6px 16px rgba(21,42,61,.06);overflow:hidden}
+  .logrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);
+    font-size:14px;touch-action:pan-y;will-change:transform;background:var(--card)}
+  .logrow:last-child{border-bottom:none}
+  .logrow .main{flex:1;min-width:0;cursor:pointer}
+  .logrow .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .logrow .d{color:var(--muted);font-size:11px;margin-top:2px}
+  .logrow .amt{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+  .del{background:none;border:none;color:var(--bad);font-size:22px;padding:0 6px;cursor:pointer;line-height:1;
+    transition:transform 100ms var(--ease-out-cubic)}
+  .del:active{transform:scale(.85)}
+  .row-in{animation:rowIn 340ms var(--ease-out-quint) both}
+  @keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  /* --- Ugerapport --- */
+  .week{display:flex;align-items:flex-end;gap:8px;height:84px}
+  .week .col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+  .week .b{width:100%;background:var(--card2);border-radius:5px 5px 0 0;transition:height 480ms var(--ease-out-quint)}
+  .week .b.today{background:linear-gradient(180deg,var(--accent2),var(--accent))}
+  .week .b.over{background:var(--bad)}
+  .week .lb{font-size:10px;color:var(--muted)}
+  .week .lb.now{color:var(--ink);font-weight:700}
+  .frow{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--line);gap:8px}
+  .frow:last-child{border-bottom:none}
+  .frow .l{color:var(--muted)}
+  .frow .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .frow .v.over{color:var(--bad-text)} .frow .v.under{color:var(--good-text)}
+  .donut-wrap{display:flex;align-items:center;gap:16px}
+  .donut-legend{flex:1;font-size:12px}
+  .donut-legend .li{display:flex;align-items:center;gap:6px;margin:4px 0}
+  .donut-legend .dot{width:10px;height:10px;border-radius:3px;flex:none}
+  .donut-seg{transition:stroke-dashoffset 700ms var(--ease-out-quint)}
+
+  /* --- Liste-rækker (Mere) --- */
+  .listrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;
+    border-bottom:1px solid var(--line);font-size:14px;background:none;border-left:none;border-right:none;
+    border-top:none;width:100%;text-align:left;color:var(--ink);cursor:pointer}
+  .listrow:last-child{border-bottom:none}
+  .listrow .r{color:var(--muted);font-size:13px;white-space:nowrap}
+  .cl-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:8px}
+  .cl-row:last-child{border-bottom:none}
+  .cl-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer}
+  .cl-check{font-size:18px;flex:none;transition:transform 150ms var(--ease-spring)}
+  .cl-main:active .cl-check{transform:scale(1.25)}
+  .cl-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+  .cl-text.done{text-decoration:line-through;color:var(--muted)}
+  .cl-who{font-size:11px;color:var(--muted)}
+
+  /* --- Status / toasts / skeleton --- */
+  .status{font-size:12px;text-align:center;padding:7px;border-radius:8px;max-height:0;overflow:hidden;opacity:0;
+    transition:max-height 200ms var(--ease-out-quint),opacity 200ms var(--ease-out-quint),margin 200ms var(--ease-out-quint)}
+  .status.show{max-height:60px;opacity:1}
+  .status.ok{background:rgba(22,163,74,.1);color:var(--good-text)}
+  .status.err{background:rgba(220,38,38,.1);color:var(--bad-text)}
+  .status.sync{background:rgba(37,99,235,.1);color:var(--accent-text)}
+  .skel{height:14px;background:linear-gradient(90deg,#eef2f6,#e2e9f0,#eef2f6);background-size:200% 100%;
+    animation:sh 1.2s infinite;border-radius:4px;margin:10px 0}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .toasts{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + 8px);display:flex;flex-direction:column;
+    align-items:center;gap:8px;z-index:60;pointer-events:none;padding:0 16px}
+  .toast{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;
+    display:flex;align-items:center;gap:10px;max-width:520px;width:100%;box-shadow:0 12px 28px rgba(21,42,61,.18);
+    animation:toastIn 220ms var(--ease-out-quint);overflow:hidden;position:relative;color:var(--ink)}
+  .toast.out{animation:toastOut 160ms var(--ease-in-cubic) forwards}
+  .toast .txt{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toast button{background:none;border:none;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;padding:4px 6px}
+  .toast .bar2{position:absolute;left:0;bottom:0;height:2px;background:var(--accent);animation:shrink linear forwards}
+  @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(8px) scale(.98)}}
+  @keyframes shrink{from{width:100%}to{width:0%}}
+  .confetti{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:70;
+    animation:confettiFly 650ms ease-out forwards}
+  @keyframes confettiFly{
+    0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(260deg) scale(.4)}
+  }
+
+  /* --- Startskærm --- */
+  #splash{position:fixed;inset:0;background:linear-gradient(160deg,#ffffff,#eaf2fb 55%,#eafaf1);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:28px;
+    transition:opacity 380ms var(--ease-out-cubic),transform 380ms var(--ease-out-cubic)}
+  #splash.leaving{opacity:0;transform:scale(1.03);pointer-events:none}
+  .splash-inner{max-width:420px;width:100%;text-align:center}
+  .splash-title{font-family:"Times New Roman",Times,serif;font-size:46px;margin:0 0 10px;color:var(--ink);
+    letter-spacing:.3px;font-weight:400}
+  .splash-sub{color:var(--muted);font-size:14px}
+  .splash-pill{display:inline-block;background:#fff;border:1px solid var(--line);color:var(--muted);
+    font-size:12px;padding:6px 12px;border-radius:999px;margin-top:18px;white-space:nowrap}
+  .splash-who{margin-top:38px;display:flex;flex-direction:column;gap:10px}
+  .who-btns{display:flex;gap:10px}
+  .who-btns button{flex:1;padding:16px 0;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;
+    border:1px solid var(--line);background:#fff;color:var(--muted);transition:transform 100ms var(--ease-out-cubic)}
+  .who-btns button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 8px 20px rgba(37,99,235,.25)}
+  .who-btns button:active{transform:scale(.97)}
+
+  /* --- Fuldskærms tilføj / sheets --- */
+  .screen{position:fixed;inset:0;z-index:45;background:var(--bg);max-width:640px;margin:0 auto;display:none;
+    flex-direction:column;overflow-y:auto}
+  .screen.show{display:flex;animation:paneIn 220ms var(--ease-out-quint)}
+  .amount{text-align:center;padding:4px 0 0}
+  .amount .v{font-size:44px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .amount .cur{color:var(--muted);font-size:22px;font-weight:600;margin-left:6px}
+  .amount .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .amount .expr{color:var(--accent);font-size:12px;margin-top:6px;min-height:15px}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .chip{background:#fff;border:1px solid var(--line);color:var(--ink);font-size:13px;padding:9px 13px;
+    border-radius:999px;white-space:nowrap;cursor:pointer;transition:transform 100ms var(--ease-out-cubic)}
+  .chip.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;font-weight:600}
+  .chip:active{transform:scale(.97)}
+  .modal{position:fixed;inset:0;background-color:rgba(15,25,35,0);visibility:hidden;opacity:0;
+    display:flex;align-items:flex-end;justify-content:center;z-index:50;
+    transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 200ms}
+  .modal.show{visibility:visible;opacity:1;background-color:rgba(15,25,35,.45);
+    transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 0s}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:18px;width:100%;
+    max-width:640px;max-height:82vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(21,42,61,.16)}
+  .sheet.anim{animation:up 220ms var(--ease-spring)}
+  @keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
+  .grabber{width:44px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 14px}
+  .amt-wrap{position:relative}
+  .amt-wrap input{cursor:pointer;padding-right:34px}
+  .amt-wrap .amt-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;
+    font-size:15px;opacity:.55}
+  .calc{background:var(--card);border-top:1px solid var(--line);border-radius:16px 16px 0 0;
+    box-shadow:0 -10px 30px rgba(21,42,61,.16);padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  .calc-fixed{position:fixed;left:0;right:0;bottom:0;z-index:55;max-width:640px;margin:0 auto;
+    transform:translateY(105%);transition:transform 260ms var(--ease-out-quint)}
+  .calc-fixed.open{transform:translateY(0)}
+  .calc-toprow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .calc-ops{display:flex;gap:6px;flex:1}
+  .calc-btn{padding:15px 0;border:none;border-radius:10px;background:var(--card2);color:var(--ink);
+    font-size:20px;font-weight:600;cursor:pointer;transition:transform 100ms var(--ease-out-cubic),background 150ms}
+  .calc-btn:active{transform:scale(.95);background:#dbe6f2}
+  .calc-btn.op{flex:1;color:var(--accent);font-weight:700;font-size:18px;padding:11px 0}
+  .calc-btn.back{color:var(--bad-text);font-size:18px}
+  .calc-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
+    font-size:12px;padding:8px 12px;cursor:pointer;flex:none}
+  .calc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-inner">
+    <h1 class="splash-title">Rejsebudget</h1>
+    <div class="splash-sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
+    <div class="splash-pill" id="splash-countdown"></div>
+    <div class="splash-who">
+      <div class="muted" style="font-size:12px">Hvem er du?</div>
+      <div class="who-btns">
+        <button type="button" class="primary" onclick="enterApp('Jakob')">Jakob</button>
+        <button type="button" onclick="enterApp('Frida')">Frida</button>
+      </div>
+      <div class="muted" style="font-size:12px">Huskes på denne enhed</div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <h1 id="top-title">Rejsebudget</h1>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="countdown" class="pill"></span>
+      <button class="avatar" id="who-avatar" onclick="setTab('mere')" aria-label="Skift person"></button>
+    </div>
+  </div>
+
+  <!-- ---------- HJEM ---------- -->
+  <div id="tab-hjem" class="pane-wrap">
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+    <div class="hero">
+      <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Dagsbudget brugt">
+        <circle cx="48" cy="48" r="38" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="12"></circle>
+        <circle id="day-ring" class="ring-fg" cx="48" cy="48" r="38" fill="none" stroke="#fff" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="0 239" transform="rotate(-90 48 48)"></circle>
+      </svg>
+      <div>
+        <div class="l" id="day-label">Tilbage i dag</div>
+        <div class="v" id="day-left">–</div>
+        <div class="l" id="day-sub">–</div>
+      </div>
+    </div>
+    <div class="totals-grid">
+      <div class="totbox"><div class="v" id="h-week">–</div><div class="l">Seneste 7 dage</div></div>
+      <div class="totbox"><div class="v" id="h-par">–</div><div class="l">Jer to i alt</div></div>
+      <div class="totbox"><div class="v" id="h-rest">–</div><div class="l">Tilbage af budget</div></div>
+    </div>
+    <div class="card">
+      <div class="hd">Hurtig tilføj</div>
+      <div id="quick-cats" class="chips"></div>
+    </div>
+    <div class="card">
+      <div class="hd"><span>Seneste</span><button class="link" onclick="setTab('log')">Se alle</button></div>
+      <div id="recent"><div class="skel"></div><div class="skel"></div></div>
+    </div>
+  </div>
+
+  <!-- ---------- KASSER ---------- -->
+  <div id="tab-kasser" class="pane-wrap" style="display:none">
+    <div class="seg" id="kasser-seg">
+      <div class="ind"></div>
+      <button type="button" data-v="Jakob" onclick="setKasserView('Jakob')">Jakob</button>
+      <button type="button" data-v="Frida" onclick="setKasserView('Frida')">Frida</button>
+      <button type="button" data-v="Begge" onclick="setKasserView('Begge')">Begge</button>
+    </div>
+    <div class="card">
+      <div class="hd"><span>Rejse + shopping</span><span class="muted" id="k-pct" style="text-transform:none;letter-spacing:0;font-weight:600">–</span></div>
+      <div style="font-size:26px;font-weight:700" class="tnum"><span id="k-spent">–</span> <span class="muted" style="font-size:15px;font-weight:600">/ <span id="k-budget">–</span></span></div>
+      <div class="stackbar" id="k-stack"></div>
+      <div class="legend" id="k-legend"></div>
+    </div>
+    <div class="muted" style="font-size:13px">Tryk på en kategori for udgifter · ✏️ for at rette budgettet</div>
+    <div id="kasser"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+  </div>
+
+  <!-- ---------- LOG ---------- -->
+  <div id="tab-log" class="pane-wrap" style="display:none">
+    <div class="seg sm" id="log-seg" style="width:200px;align-self:flex-start">
+      <div class="ind"></div>
+      <button type="button" data-v="Mine" class="active" onclick="setLogView('Mine')">Mine</button>
+      <button type="button" data-v="Begge" onclick="setLogView('Begge')">Begge</button>
+    </div>
+    <input id="log-search" placeholder="Søg i beskrivelse eller kategori…" aria-label="Søg i udgifter">
+    <div id="log"><div class="skel"></div><div class="skel"></div></div>
+  </div>
+
+  <!-- ---------- MERE ---------- -->
+  <div id="tab-mere" class="pane-wrap" style="display:none">
+    <div class="card">
+      <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+      <div class="totals-grid">
+        <div class="totbox tint"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
+        <div class="totbox tint"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
+        <div class="totbox tint"><div class="v" id="ov-par">–</div><div class="l">Jer to</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd"><span>Ugerapport</span><span class="muted" id="week-label" style="text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+      <div class="week" id="week-chart"></div>
+      <div id="week-sum" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Forbrugsprognose</div>
+      <div id="forecast"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Hvor går pengene hen</div>
+      <div id="donut"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Indsigt</div>
+      <div id="insight"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Indkøbs- &amp; huskeliste</div>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:3">
+          <input id="cl-input" placeholder="Tilføj punkt…" maxlength="140" aria-label="Nyt punkt til liste"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}">
+        </div>
+        <div style="flex:1"><button class="btn accent" style="padding:12px 0" onclick="addChecklistItem()">Tilføj</button></div>
+      </div>
+      <div id="checklist" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="hd">Dig</div>
+      <div class="seg" id="who-seg">
+        <div class="ind"></div>
+        <button type="button" data-v="Jakob" onclick="setWho('Jakob')">Jakob</button>
+        <button type="button" data-v="Frida" onclick="setWho('Frida')">Frida</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px">Nye udgifter registreres på den valgte person.</div>
+    </div>
+    <div class="card">
+      <div class="hd">Rejsedatoer</div>
+      <div class="muted" style="font-size:13px">Bruges til nedtælling, dagsbudget og prognose. Gemmes lokalt på denne enhed.</div>
+      <div class="row">
+        <div><label>Afrejse</label><input id="s-afrejse" type="date"></div>
+        <div><label>Hjemme</label><input id="s-hjem" type="date"></div>
+      </div>
+      <button class="btn accent" style="margin-top:12px" onclick="saveTripDatesFromInputs()">Gem datoer</button>
+    </div>
+    <div class="card">
+      <div class="hd">Valutakurser</div>
+      <div class="muted" style="font-size:13px">Bruges på nye udgifter. Tidligere udgifter beholder deres kurs.</div>
+      <div class="row">
+        <div><label>1 JPY = kr</label><input id="s-jpy" type="number" step="any" min="0"></div>
+        <div><label>1 AUD = kr</label><input id="s-aud" type="number" step="any" min="0"></div>
+      </div>
+      <button class="btn ghost" style="margin-top:10px" onclick="fetchLiveRates()">Hent dagens kurser</button>
+      <button class="btn accent" style="margin-top:8px" onclick="saveRates()">Gem kurser</button>
+    </div>
+    <div class="card">
+      <div class="hd">Eksportér</div>
+      <div class="muted" style="font-size:13px">Kopiér alle udgifter som CSV til Excel-arkets Forbrugslog-fane.</div>
+      <button class="btn ghost" style="margin-top:10px" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
+    </div>
+  </div>
+
+  <div class="nav" id="navbar">
+    <button type="button" id="n-hjem" class="active" onclick="setTab('hjem')"><span class="ic">🏠</span>Hjem</button>
+    <button type="button" id="n-kasser" onclick="setTab('kasser')"><span class="ic">🧺</span>Kasser</button>
+    <button type="button" class="fab" onclick="openAdd()" aria-label="Ny udgift">+</button>
+    <button type="button" id="n-log" onclick="setTab('log')"><span class="ic">📋</span>Log</button>
+    <button type="button" id="n-mere" onclick="setTab('mere')"><span class="ic">⚙️</span>Mere</button>
+  </div>
+</div>
+
+<!-- ---------- NY UDGIFT (fuldskærm) ---------- -->
+<div id="screen-add" class="screen">
+  <div class="topbar">
+    <button class="refresh" onclick="closeAdd()">Annullér</button>
+    <div class="hd" style="margin:0">Ny udgift for <span id="who-label">Jakob</span></div>
+    <span style="width:64px"></span>
+  </div>
+  <div style="padding:16px 16px 0;display:flex;flex-direction:column;gap:12px;flex:1">
+    <div class="amount">
+      <div><span class="v" id="a-amount">0</span><span class="cur" id="a-cur">DKK</span></div>
+      <div class="sub" id="a-sub"></div>
+      <div class="expr" id="a-expr"></div>
+    </div>
+    <div class="seg" id="cur-seg">
+      <div class="ind"></div>
+      <button type="button" data-v="DKK" class="active" onclick="setCurrency('DKK')">DKK</button>
+      <button type="button" data-v="JPY" onclick="setCurrency('JPY')">JPY</button>
+      <button type="button" data-v="AUD" onclick="setCurrency('AUD')">AUD</button>
+    </div>
+    <input id="f-besk" placeholder="Beskrivelse (valgfri)" maxlength="120">
+    <div id="f-chips" class="chips"></div>
+    <div id="a-status" class="status" role="status" aria-live="polite"></div>
+  </div>
+  <div class="calc" style="margin-top:auto">
+    <div class="calc-toprow">
+      <div class="calc-ops">
+        <button type="button" class="calc-btn op" onclick="calcPress('+')" aria-label="Plus">+</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('-')" aria-label="Minus">−</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('*')" aria-label="Gange">×</button>
+        <button type="button" class="calc-btn op" onclick="calcPress('/')" aria-label="Division">÷</button>
+      </div>
+      <button type="button" class="calc-clear" onclick="calcPress('C')">Ryd</button>
+    </div>
+    <div class="calc-grid">
+      <button type="button" class="calc-btn" onclick="calcPress('1')">1</button>
+      <button type="button" class="calc-btn" onclick="calcPress('2')">2</button>
+      <button type="button" class="calc-btn" onclick="calcPress('3')">3</button>
+      <button type="button" class="calc-btn" onclick="calcPress('4')">4</button>
+      <button type="button" class="calc-btn" onclick="calcPress('5')">5</button>
+      <button type="button" class="calc-btn" onclick="calcPress('6')">6</button>
+      <button type="button" class="calc-btn" onclick="calcPress('7')">7</button>
+      <button type="button" class="calc-btn" onclick="calcPress('8')">8</button>
+      <button type="button" class="calc-btn" onclick="calcPress('9')">9</button>
+      <button type="button" class="calc-btn" onclick="calcPress('.')">,</button>
+      <button type="button" class="calc-btn" onclick="calcPress('0')">0</button>
+      <button type="button" class="calc-btn back" onclick="calcPress('back')" aria-label="Slet sidste tegn">⌫</button>
+    </div>
+    <button class="btn good morph-btn" style="margin-top:10px;width:100%" onclick="addExpense()" id="add-btn">
+      <span class="btn-label" id="add-label">Tilføj udgift</span>
+      <svg class="btn-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path class="btn-check-mark" d="M4 12.5l5.5 5.5L20 6.5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ---------- RET UDGIFT ---------- -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="hd"><span id="modal-title">Ret udgift</span><button class="refresh" style="color:var(--bad)" onclick="delFromEdit()">Slet</button></div>
+    <label>Beskrivelse</label>
+    <input id="e-besk" maxlength="120">
+    <div class="row">
+      <div><label>Beløb</label>
+        <div class="amt-wrap">
+          <input id="e-belob" type="text" inputmode="none" readonly onclick="openCalcSheet()" aria-label="Beløb – tryk for at åbne regnemaskine">
+          <span class="amt-icon" aria-hidden="true">🧮</span>
+        </div>
+      </div>
+      <div><label>Valuta</label><select id="e-valuta"><option>DKK</option><option>JPY</option><option>AUD</option></select></div>
+    </div>
+    <div id="e-preview" class="muted" style="font-size:13px;margin:6px 0 0"></div>
+    <label>Kategori</label>
+    <select id="e-kode"></select>
+    <label>Person</label>
+    <select id="e-hvem"><option>Jakob</option><option>Frida</option></select>
+    <button class="btn accent" style="margin-top:14px" onclick="saveEdit()">Gem ændringer</button>
+    <button class="btn ghost" style="margin-top:8px" onclick="closeModal()">Annullér</button>
+  </div>
+</div>
+
+<!-- ---------- KATEGORI-DRILLDOWN ---------- -->
+<div id="drill" class="modal" role="dialog" aria-modal="true" aria-labelledby="drill-title" onclick="if(event.target===this)closeDrill()">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="hd"><span id="drill-title">Kategori</span><button class="refresh" onclick="closeDrill()" aria-label="Luk">Luk</button></div>
+    <div id="drill-head"></div>
+    <div id="drill-list"></div>
+  </div>
+</div>
+
+<!-- ---------- BUDGET-REDIGERING ---------- -->
+<div id="budget" class="modal" role="dialog" aria-modal="true" aria-labelledby="budget-title" onclick="if(event.target===this)closeBudget()">
+  <div class="sheet">
+    <div class="grabber"></div>
+    <div class="hd"><span id="budget-title">Budget</span><button class="refresh" onclick="closeBudget()" aria-label="Luk">Luk</button></div>
+    <div class="muted" style="font-size:13px">Budgettet gælder for hele rejsen og deles mellem jer to.</div>
+    <div class="row">
+      <div><label>Jakob</label><input id="b-jakob" type="number" step="50" min="0"></div>
+      <div><label>Frida</label><input id="b-frida" type="number" step="50" min="0"></div>
+    </div>
+    <button class="btn accent" style="margin-top:14px" onclick="saveBudget()">Gem budget</button>
+  </div>
+</div>
+
+<!-- ---------- REGNEMASKINE-PANEL (til Ret udgift) ---------- -->
+<div class="calc calc-fixed" id="calc-fixed">
+  <div class="calc-toprow">
+    <div class="calc-ops">
+      <button type="button" class="calc-btn op" onclick="calcPress('+')" aria-label="Plus">+</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('-')" aria-label="Minus">−</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('*')" aria-label="Gange">×</button>
+      <button type="button" class="calc-btn op" onclick="calcPress('/')" aria-label="Division">÷</button>
+    </div>
+    <button type="button" class="calc-clear" onclick="calcPress('C')">Ryd</button>
+  </div>
+  <div class="calc-grid">
+    <button type="button" class="calc-btn" onclick="calcPress('1')">1</button>
+    <button type="button" class="calc-btn" onclick="calcPress('2')">2</button>
+    <button type="button" class="calc-btn" onclick="calcPress('3')">3</button>
+    <button type="button" class="calc-btn" onclick="calcPress('4')">4</button>
+    <button type="button" class="calc-btn" onclick="calcPress('5')">5</button>
+    <button type="button" class="calc-btn" onclick="calcPress('6')">6</button>
+    <button type="button" class="calc-btn" onclick="calcPress('7')">7</button>
+    <button type="button" class="calc-btn" onclick="calcPress('8')">8</button>
+    <button type="button" class="calc-btn" onclick="calcPress('9')">9</button>
+    <button type="button" class="calc-btn" onclick="calcPress('.')">,</button>
+    <button type="button" class="calc-btn" onclick="calcPress('0')">0</button>
+    <button type="button" class="calc-btn back" onclick="calcPress('back')" aria-label="Slet sidste tegn">⌫</button>
+  </div>
+  <button type="button" class="btn accent" style="margin-top:10px" onclick="closeCalc()">Færdig</button>
+</div>
+
+<div id="toasts" class="toasts"></div>
+
+<script>
+const SUPABASE_URL="https://wtymsksnkkkfowfbocct.supabase.co";
+const SUPABASE_KEY="sb_publishable_IJWZ1O45f70f8pZcWnzjzg_YvEIKBH1";
+const REST=SUPABASE_URL+"/rest/v1";
+const BASE_HEADERS={apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+async function api(path,opts){
+  opts=opts||{};
+  const headers=Object.assign({},BASE_HEADERS,opts.headers||{});
+  const res=await fetch(REST+path,{method:opts.method||"GET",headers,body:opts.body});
+  if(!res.ok){
+    let msg=res.status+" "+res.statusText;
+    try{const j=await res.json();msg=j.message||j.hint||j.details||msg;}catch(e){}
+    throw new Error(msg);
+  }
+  if(res.status===204)return null;
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
+function reducedMotion(){return window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;}
+function haptic(ms){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+const ICONS={"Hotel JP":"🏨","Mad JP":"🍜","Splurge JP":"🍶","Shinkansen":"🚄","Metro JP":"🚇","Aktiviteter JP":"⛩️",
+  "Bil":"🚙","Braendstof":"⛽","Parkering":"🅿️","Airbnb":"🏡","Hotel AU":"🏨","Mad camper":"🍳","Mad by AU":"🍽️",
+  "Fly AU":"✈️","Rev":"🤿","Aktiviteter AU":"🎡","Transport AU":"🚌","Objektiv":"📷","Toj":"👕","Shopping":"🛍️"};
+function icon(kode){return ICONS[kode]||"💰";}
+const SEKTION_COLOR={"Japan":"#2563eb","Australien":"#16a34a","Shopping":"#d97706"};
+const CACHE_KEY="rejsebudget_cache_v2";
+const TRIP_KEY="rejsebudget_trip_dates";
+const PENDING_KEY="rejsebudget_pending_queue";
+const WHO_KEY="rejsebudget_who";
+function lastKodeKey(w){return "rejsebudget_last_kode_"+w;}
+let who="Jakob",tab="hjem",kasserView="Jakob",logView="Mine",searchQuery="",justEnteredTab=true,justSwiped=false;
+let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40},checklist=[];
+let editingId=null,editingKode=null,addKode=null,addCurrency="DKK",loaded=false,pollTimer=null;
+let pendingDeletes=new Set(),toastTimers={};
+const $=id=>document.getElementById(id);
+const kr=n=>Math.round(n).toLocaleString("da-DK")+" kr";
+const krD=n=>Number(n).toLocaleString("da-DK",{minimumFractionDigits:2,maximumFractionDigits:2})+" kr";
+const DAY=86400000;
+function setStatus(msg,cls,sticky){
+  const el=$("screen-add").classList.contains("show")?$("a-status"):$("status");
+  el.textContent=msg;el.className="status show "+cls;
+  if(cls==="ok"&&!sticky)setTimeout(()=>el.classList.remove("show"),1600);
+}
+function catsForWho(w){return cats.filter(c=>Number(w==="Jakob"?c.budget_jakob:c.budget_frida)>0).sort((a,b)=>a.sort_order-b.sort_order);}
+function budgetOf(c,w){return Number(w==="Jakob"?c.budget_jakob:c.budget_frida);}
+function catsForView(v){
+  if(v==="Begge")return cats.filter(c=>Number(c.budget_jakob)>0||Number(c.budget_frida)>0).sort((a,b)=>a.sort_order-b.sort_order);
+  return catsForWho(v);
+}
+function budgetOfView(c,v){return v==="Begge"?Number(c.budget_jakob)+Number(c.budget_frida):budgetOf(c,v);}
+function label(kode){const c=cats.find(x=>x.kode===kode);return c?c.label:kode;}
+function esc(s){return String(s).replace(/</g,"&lt;");}
+function spentByKode(w){const m={};rows.filter(r=>r.hvem===w&&!pendingDeletes.has(r.id)).forEach(r=>{m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
+function spentByView(v){
+  if(v==="Begge"){const m={};rows.forEach(r=>{if(pendingDeletes.has(r.id))return;m[r.kode]=(m[r.kode]||0)+Number(r.belob_dkk||0);});return m;}
+  return spentByKode(v);
+}
+function totalBudget(v){return catsForView(v).reduce((a,c)=>a+budgetOfView(c,v),0);}
+function totalSpent(v){return Object.values(spentByView(v)).reduce((a,b)=>a+b,0);}
+
+/* --- Kategori-chips --- */
+function catChips(containerId,onPick,activeKode){
+  const el=$(containerId);if(!el)return;
+  const list=catsForWho(who);
+  el.innerHTML=list.map(c=>'<button type="button" class="chip'+(c.kode===activeKode?" active":"")+'" data-k="'+c.kode+'">'+
+    icon(c.kode)+' '+esc(c.label)+'</button>').join("");
+  el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>onPick(b.dataset.k));
+}
+function fillKodeDropdown(){
+  const list=catsForWho(who);
+  if(!list.length)return;
+  if(!addKode||!list.some(c=>c.kode===addKode)){
+    let last=null;try{last=localStorage.getItem(lastKodeKey(who));}catch(e){}
+    addKode=(last&&list.some(c=>c.kode===last))?last:list[0].kode;
+  }
+  catChips("f-chips",k=>{addKode=k;fillKodeDropdown();},addKode);
+  catChips("quick-cats",k=>{addKode=k;openAdd();},addKode);
+  renderAmount();
+}
+
+/* --- Regnemaskine --- */
+let calcState={add:{expr:"",justEval:false},edit:{expr:"",justEval:false}};
+let activeCalcCtx="add";
+function calcFormatNum(n){if(!isFinite(n))return "0";return String(Math.round(n*10000)/10000);}
+function calcEval(exprStr){
+  let s=(exprStr||"").replace(/[+\-*/]$/,"");
+  if(!s)return 0;
+  const tokens=s.match(/(\d+\.?\d*|[+\-*/])/g);
+  if(!tokens||!tokens.length)return 0;
+  let result=parseFloat(tokens[0])||0;
+  for(let i=1;i<tokens.length;i+=2){
+    const op=tokens[i],val=parseFloat(tokens[i+1]);
+    if(isNaN(val))break;
+    if(op==="+")result+=val;else if(op==="-")result-=val;
+    else if(op==="*")result*=val;else if(op==="/")result=val!==0?result/val:result;
+  }
+  return result;
+}
+function calcDisplayExpr(e){
+  return e.replace(/\*/g," × ").replace(/\//g," ÷ ").replace(/\+/g," + ").replace(/-/g," − ").replace(/\s+/g," ").trim();
+}
+function getCalcValue(ctx){const st=calcState[ctx];if(!st||!st.expr)return 0;return calcEval(st.expr);}
+function renderAmount(){
+  const v=getCalcValue("add"),st=calcState.add;
+  $("a-amount").textContent=Number(v).toLocaleString("da-DK",{maximumFractionDigits:2});
+  $("a-cur").textContent=addCurrency;
+  $("a-expr").textContent=/[+\-*/]/.test(st.expr)?calcDisplayExpr(st.expr):"";
+  $("a-sub").textContent=v>0
+    ? "= "+krD(v*rates[addCurrency])+(addCurrency==="DKK"?"":" · 1 "+addCurrency+" = "+rates[addCurrency].toLocaleString("da-DK",{maximumFractionDigits:4})+" kr")
+    : "Tast beløbet nedenfor";
+  const lbl=$("add-label");
+  if(lbl)lbl.textContent=v>0?"Tilføj udgift · "+krD(v*rates[addCurrency]):"Tilføj udgift";
+}
+function updatePreviewEdit(){
+  const b=getCalcValue("edit"),v=$("e-valuta").value,el=$("e-preview");
+  if(el)el.textContent=b>0?"= "+krD(b*rates[v])+" i alt":"";
+}
+function calcRender(ctx){
+  if(ctx==="add"){renderAmount();return;}
+  const field=$("e-belob");
+  if(field)field.value=calcState.edit.expr?calcDisplayExpr(calcState.edit.expr):"";
+  updatePreviewEdit();
+}
+function calcPress(key){
+  const ctx=activeCalcCtx;if(!ctx)return;
+  const st=calcState[ctx];
+  const isOp=k=>["+","-","*","/"].includes(k);
+  if(key==="C"){st.expr="";st.justEval=false;}
+  else if(key==="back"){if(st.justEval){st.expr="";st.justEval=false;}else st.expr=st.expr.slice(0,-1);}
+  else if(isOp(key)){
+    if(st.justEval)st.justEval=false;
+    if(!st.expr)return;
+    const last=st.expr.slice(-1);
+    if(isOp(last))st.expr=st.expr.slice(0,-1)+key;else st.expr+=key;
+  }else if(key==="."){
+    if(st.justEval){st.expr="0.";st.justEval=false;}
+    else{
+      const parts=st.expr.split(/[+\-*/]/),seg=parts[parts.length-1];
+      if(seg.includes("."))return;
+      st.expr+=(seg===""?"0.":".");
+    }
+  }else{
+    if(st.justEval){st.expr=key;st.justEval=false;}else st.expr+=key;
+  }
+  calcRender(ctx);
+  haptic(6);
+}
+function openCalcSheet(){activeCalcCtx="edit";calcRender("edit");$("calc-fixed").classList.add("open");}
+function closeCalc(){$("calc-fixed").classList.remove("open");activeCalcCtx=$("screen-add").classList.contains("show")?"add":null;}
+function resetCalc(ctx){calcState[ctx]={expr:"",justEval:false};calcRender(ctx);}
+document.addEventListener("click",e=>{
+  const panel=$("calc-fixed");
+  if(!panel.classList.contains("open"))return;
+  if(panel.contains(e.target)||e.target===$("e-belob"))return;
+  closeCalc();
+});
+
+/* --- Ny udgift-skærm --- */
+function openAdd(){
+  activeCalcCtx="add";
+  $("who-label").textContent=who;
+  fillKodeDropdown();
+  $("screen-add").classList.add("show");
+  document.body.style.overflow="hidden";
+  initIndicator($("cur-seg"),document.querySelector('#cur-seg button[data-v="'+addCurrency+'"]'));
+}
+function closeAdd(){
+  $("screen-add").classList.remove("show");
+  document.body.style.overflow="";
+  activeCalcCtx=null;
+}
+function setCurrency(v){
+  addCurrency=v;
+  document.querySelectorAll("#cur-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  moveIndicator($("cur-seg"),document.querySelector('#cur-seg button[data-v="'+v+'"]'));
+  renderAmount();
+}
+
+/* --- Startskærm --- */
+function enterApp(w){
+  if(w){who=w;try{localStorage.setItem(WHO_KEY,w);}catch(e){}}
+  const splash=$("splash");
+  splash.classList.add("leaving");
+  setTimeout(()=>{
+    splash.style.display="none";
+    const app=$("app");
+    app.style.display="block";
+    syncWhoUI();
+    syncKasserSegUI();
+    setLogView(logView);
+    initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));
+    initIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+logView+'"]'));
+    initIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));
+    initIndicator($("cur-seg"),document.querySelector('#cur-seg button[data-v="'+addCurrency+'"]'));
+    applyShortcutParams();
+    render();
+  },reducedMotion()?0:380);
+}
+function applyShortcutParams(){
+  try{
+    const params=new URLSearchParams(location.search);
+    const qWho=params.get("who");
+    if(qWho==="Jakob"||qWho==="Frida")setWho(qWho);
+    const qTab=params.get("tab");
+    if(["hjem","kasser","log","mere"].includes(qTab))setTab(qTab);
+    if(params.get("add")==="1")openAdd();
+  }catch(e){}
+}
+
+/* --- Glidende indikator --- */
+function initIndicator(container,activeBtn){
+  if(!container||!activeBtn)return;
+  const ind=container.querySelector(".ind");if(!ind)return;
+  ind.style.transition="none";
+  ind.style.width=activeBtn.offsetWidth+"px";
+  ind.style.transform="translateX("+(activeBtn.offsetLeft-3)+"px)";
+  void ind.offsetWidth;
+  ind.style.transition="";
+}
+function moveIndicator(container,activeBtn){
+  if(!container||!activeBtn)return;
+  const ind=container.querySelector(".ind");if(!ind)return;
+  ind.style.width=activeBtn.offsetWidth+"px";
+  ind.style.transform="translateX("+(activeBtn.offsetLeft-3)+"px)";
+}
+function syncWhoUI(){
+  $("who-avatar").textContent=who.slice(0,1);
+  $("who-label").textContent=who;
+  document.querySelectorAll("#who-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===who));
+  moveIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));
+}
+function setWho(w){
+  who=w;try{localStorage.setItem(WHO_KEY,w);}catch(e){}
+  syncWhoUI();
+  if(kasserView!=="Begge"){kasserView=w;syncKasserSegUI();}
+  addKode=null;fillKodeDropdown();render();
+}
+function setKasserView(v){kasserView=v;syncKasserSegUI();render();}
+function syncKasserSegUI(){
+  document.querySelectorAll("#kasser-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===kasserView));
+  moveIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));
+}
+function setLogView(v){
+  logView=v;
+  document.querySelectorAll("#log-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  moveIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+v+'"]'));
+  justEnteredTab=true;render();
+}
+const TAB_TITLE={hjem:"Rejsebudget",kasser:"Kasser",log:"Log",mere:"Mere"};
+function setTab(t){
+  tab=t;justEnteredTab=true;
+  ["hjem","kasser","log","mere"].forEach(x=>{
+    const el=$("tab-"+x);
+    if(x===t){el.style.display="flex";el.classList.remove("pane");void el.offsetWidth;el.classList.add("pane");}
+    else el.style.display="none";
+    $("n-"+x).classList.toggle("active",x===t);
+  });
+  $("top-title").textContent=TAB_TITLE[t];
+  window.scrollTo(0,0);
+  if(t==="kasser"){syncKasserSegUI();initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));}
+  if(t==="log")initIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+logView+'"]'));
+  if(t==="mere"){syncWhoUI();initIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));}
+  render();
+}
+
+/* --- Cache & offline-kø --- */
+function loadCacheFromStorage(){
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw)return false;
+    const c=JSON.parse(raw);
+    if(!c||!Array.isArray(c.cats)||!Array.isArray(c.rows))return false;
+    cats=c.cats;rows=c.rows;if(c.rates)rates=Object.assign(rates,c.rates);
+    checklist=Array.isArray(c.checklist)?c.checklist:[];
+    loaded=true;
+    $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
+    fillKodeDropdown();render();
+    return true;
+  }catch(e){return false;}
+}
+function saveCacheToStorage(){
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify({cats:cats,rows:rows,rates:rates,checklist:checklist,savedAt:Date.now()}));}catch(e){}
+}
+function loadPendingQueue(){
+  try{const q=JSON.parse(localStorage.getItem(PENDING_KEY));return Array.isArray(q)?q:[];}catch(e){return [];}
+}
+function savePendingQueue(q){try{localStorage.setItem(PENDING_KEY,JSON.stringify(q));}catch(e){}}
+function mergePendingIntoRows(){
+  const pending=loadPendingQueue();
+  if(!pending.length)return;
+  const existingIds=new Set(rows.map(r=>r.id));
+  rows=pending.filter(p=>!existingIds.has(p.id)).concat(rows);
+}
+let flushingQueue=false;
+async function flushPendingQueue(){
+  if(flushingQueue||!navigator.onLine)return;
+  const queue=loadPendingQueue();
+  if(!queue.length)return;
+  flushingQueue=true;
+  const remaining=[];
+  for(const item of queue){
+    try{
+      const rec={dato:item.dato,beskrivelse:item.beskrivelse,kode:item.kode,belob:item.belob,valuta:item.valuta,rate_used:item.rate_used,hvem:item.hvem};
+      const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
+      const i=rows.findIndex(r=>r.id===item.id);
+      if(i>=0)rows[i]=data[0];
+    }catch(err){remaining.push(item);}
+  }
+  savePendingQueue(remaining);
+  flushingQueue=false;
+  saveCacheToStorage();
+  if(queue.length&&!remaining.length)setStatus("Offline-udgifter synkroniseret ✓","ok");
+  render();
+}
+
+/* --- Rejsedatoer & nedtælling --- */
+function loadTripDates(){
+  try{const s=JSON.parse(localStorage.getItem(TRIP_KEY));if(s&&s.afrejse&&s.hjem)return s;}catch(e){}
+  return {afrejse:"2026-09-28",hjem:"2026-11-24"};
+}
+function saveTripDates(a,h){localStorage.setItem(TRIP_KEY,JSON.stringify({afrejse:a,hjem:h}));renderCountdown();render();}
+function saveTripDatesFromInputs(){
+  const a=$("s-afrejse").value,h=$("s-hjem").value;
+  if(!a||!h){setStatus("Udfyld begge datoer","err");return;}
+  saveTripDates(a,h);setStatus("Datoer gemt ✓","ok");
+}
+function tripInfo(){
+  const d=loadTripDates();
+  const today=new Date();today.setHours(0,0,0,0);
+  const dAf=new Date(d.afrejse+"T00:00:00"),dHj=new Date(d.hjem+"T00:00:00");
+  const days=Math.max(1,Math.round((dHj-dAf)/DAY)+1);
+  const elapsed=Math.round((today-dAf)/DAY)+1;
+  return {afrejse:dAf,hjem:dHj,days:days,elapsed:elapsed,toAf:Math.round((dAf-today)/DAY),toHj:Math.round((dHj-today)/DAY)};
+}
+function renderCountdown(){
+  const t=tripInfo();
+  let txt,long;
+  if(t.toAf>0){txt="✈️ "+t.toAf+" dage til afrejse";long=txt;}
+  else if(t.toHj>=0){txt="🌏 Dag "+t.elapsed+"/"+t.days;long="🌏 Dag "+t.elapsed+" af "+t.days+" · "+t.toHj+" dage tilbage";}
+  else {txt="🏡 Hjemme igen";long=txt;}
+  const el=$("countdown");if(el)el.textContent=txt;
+  const sp=$("splash-countdown");if(sp)sp.textContent=long;
+  const d=loadTripDates();
+  const si=$("s-afrejse"),sh=$("s-hjem");if(si)si.value=d.afrejse;if(sh)sh.value=d.hjem;
+}
+
+/* --- Datahentning --- */
+async function loadAll(silent){
+  if(!navigator.onLine){setStatus("Ingen forbindelse – prøver igen når du er online","err",true);return;}
+  if(!silent)setStatus("Henter data…","sync",true);
+  try{
+    const [c,s,e,cl]=await Promise.all([
+      api("/categories?select=*"),
+      api("/settings?select=*"),
+      api("/expenses?select=*&order=created_at.desc"),
+      api("/checklist?select=*&order=created_at.desc")]);
+    cats=c||[];
+    (s||[]).forEach(x=>{if(x.key==="rate_JPY")rates.JPY=Number(x.value);if(x.key==="rate_AUD")rates.AUD=Number(x.value);});
+    rows=e||[];checklist=cl||[];loaded=true;
+    mergePendingIntoRows();
+    $("s-jpy").value=rates.JPY;$("s-aud").value=rates.AUD;
+    fillKodeDropdown();
+    saveCacheToStorage();
+    if(!silent)setStatus("Forbundet ✓","ok");
+    render();
+  }catch(err){setStatus("Kunne ikke hente data: "+(err.message||err),"err",true);}
+}
+
+/* --- Tilføj udgift --- */
+function confettiBurst(originEl){
+  if(reducedMotion()||!originEl)return;
+  const rect=originEl.getBoundingClientRect();
+  const colors=["#2563eb","#4f8ff7","#16a34a","#34c766","#0ea5e9"];
+  for(let i=0;i<16;i++){
+    const p=document.createElement("div");
+    p.className="confetti";
+    const angle=Math.random()*Math.PI*2,dist=40+Math.random()*90;
+    p.style.setProperty("--dx",(Math.cos(angle)*dist)+"px");
+    p.style.setProperty("--dy",(Math.sin(angle)*dist-40)+"px");
+    p.style.left=(rect.left+rect.width/2)+"px";
+    p.style.top=(rect.top+rect.height/2)+"px";
+    p.style.background=colors[i%colors.length];
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),700);
+  }
+}
+function morphToSuccess(btn,holdMs){
+  return new Promise(resolve=>{
+    if(reducedMotion()){setTimeout(resolve,150);return;}
+    btn.classList.add("success");
+    setTimeout(()=>{btn.classList.remove("success");resolve();},holdMs);
+  });
+}
+async function addExpense(){
+  const belob=getCalcValue("add"),val=addCurrency,kode=addKode;
+  if(!(belob>0)){setStatus("Skriv et beløb større end 0","err");haptic(20);return;}
+  if(!kode){setStatus("Vælg en kategori","err");return;}
+  const rec={dato:new Date().toISOString().slice(0,10),beskrivelse:$("f-besk").value.trim()||null,
+    kode:kode,belob:belob,valuta:val,rate_used:rates[val],hvem:who};
+  try{localStorage.setItem(lastKodeKey(who),kode);}catch(e){}
+  const btn=$("add-btn");
+  btn.disabled=true;setStatus("Gemmer…","sync",true);
+  if(!navigator.onLine){queueOffline(rec,btn);return;}
+  try{
+    const data=await api("/expenses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(rec)});
+    rows.unshift(data[0]);$("f-besk").value="";resetCalc("add");
+    saveCacheToStorage();
+    setStatus("Gemt ✓","ok");
+    haptic(15);
+    confettiBurst(btn);
+    render();
+    await morphToSuccess(btn,900);
+    btn.disabled=false;
+    closeAdd();
+  }catch(err){
+    if(err instanceof TypeError)queueOffline(rec,btn);
+    else{setStatus("Fejl ved gem: "+(err.message||err),"err",true);btn.disabled=false;}
+  }
+}
+function queueOffline(rec,btn){
+  const localId="local-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);
+  const localRow=Object.assign({},rec,{
+    id:localId,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),
+    belob_dkk:Math.round(rec.belob*rec.rate_used*100)/100,_pending:true
+  });
+  rows.unshift(localRow);
+  const queue=loadPendingQueue();queue.push(localRow);savePendingQueue(queue);
+  saveCacheToStorage();
+  $("f-besk").value="";resetCalc("add");
+  setStatus("Offline — gemt lokalt, synces automatisk ✓","ok",true);
+  haptic(15);
+  confettiBurst(btn);
+  render();
+  btn.disabled=false;
+  setTimeout(closeAdd,600);
+}
+
+/* --- Ret / slet udgift --- */
+function openEdit(id){
+  const r=rows.find(x=>x.id===id);if(!r)return;editingId=id;
+  $("e-besk").value=r.beskrivelse||"";$("e-valuta").value=r.valuta;$("e-hvem").value=r.hvem;
+  calcState.edit={expr:calcFormatNum(Number(r.belob)),justEval:false};
+  closeCalc();calcRender("edit");
+  $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order)
+    .map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+esc(c.label)+'</option>').join("");
+  $("e-kode").value=r.kode;
+  $("modal").classList.add("show");
+  const sheet=document.querySelector("#modal .sheet");
+  sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
+}
+function mainTap(id){
+  if(justSwiped)return;
+  const r=rows.find(x=>x.id===id);
+  if(r&&r._pending){setStatus("Venter på forbindelse — kan rettes når den er synkroniseret","err");return;}
+  openEdit(id);
+}
+function closeModal(){$("modal").classList.remove("show");editingId=null;closeCalc();}
+function delFromEdit(){const id=editingId;closeModal();if(id)delExpense(id);}
+async function saveEdit(){
+  const belob=getCalcValue("edit");
+  if(!(belob>0)){openCalcSheet();setStatus("Beløb skal være større end 0","err");return;}
+  const val=$("e-valuta").value;
+  const patch={beskrivelse:$("e-besk").value.trim()||null,belob:belob,valuta:val,rate_used:rates[val],
+    kode:$("e-kode").value,hvem:$("e-hvem").value};
+  setStatus("Gemmer…","sync",true);
+  try{
+    const data=await api("/expenses?id=eq."+editingId,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(patch)});
+    const i=rows.findIndex(x=>x.id===editingId);if(i>=0)rows[i]=data[0];
+    saveCacheToStorage();
+    closeModal();setStatus("Rettet ✓","ok");haptic(10);render();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+function delExpense(id,ev){
+  if(ev)ev.stopPropagation();
+  if(pendingDeletes.has(id))return;
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  if(r._pending){
+    rows=rows.filter(x=>x.id!==id);
+    savePendingQueue(loadPendingQueue().filter(x=>x.id!==id));
+    saveCacheToStorage();
+    setStatus("Fjernet fra offline-køen","ok");haptic(10);render();
+    return;
+  }
+  pendingDeletes.add(id);render();haptic(10);showUndoToast(r);
+}
+function showUndoToast(r){
+  const id=r.id;
+  const el=document.createElement("div");
+  el.className="toast";el.dataset.id=id;
+  el.innerHTML='<div class="txt">Slettet: '+esc(r.beskrivelse||label(r.kode))+'</div><button type="button">Fortryd</button><div class="bar2" style="animation-duration:5000ms"></div>';
+  el.querySelector("button").onclick=()=>undoDelete(id);
+  $("toasts").appendChild(el);
+  toastTimers[id]=setTimeout(()=>commitDelete(id),5000);
+}
+function removeToastEl(id){
+  const el=document.querySelector('.toast[data-id="'+id+'"]');
+  if(!el)return;
+  el.classList.add("out");setTimeout(()=>el.remove(),180);
+}
+function undoDelete(id){
+  clearTimeout(toastTimers[id]);delete toastTimers[id];
+  pendingDeletes.delete(id);removeToastEl(id);haptic(8);render();
+}
+async function commitDelete(id){
+  delete toastTimers[id];removeToastEl(id);
+  try{
+    await api("/expenses?id=eq."+id,{method:"DELETE"});
+    rows=rows.filter(r=>r.id!==id);pendingDeletes.delete(id);saveCacheToStorage();render();
+  }catch(err){pendingDeletes.delete(id);setStatus("Kunne ikke slette: "+(err.message||err),"err",true);render();}
+}
+
+/* --- Kurser --- */
+async function saveRates(){
+  const jpy=parseFloat($("s-jpy").value),aud=parseFloat($("s-aud").value);
+  if(!(jpy>0)||!(aud>0)){setStatus("Kurser skal være større end 0","err");return;}
+  setStatus("Gemmer kurser…","sync",true);
+  try{
+    await api("/settings?key=eq.rate_JPY",{method:"PATCH",body:JSON.stringify({value:jpy,updated_at:new Date().toISOString()})});
+    await api("/settings?key=eq.rate_AUD",{method:"PATCH",body:JSON.stringify({value:aud,updated_at:new Date().toISOString()})});
+    rates.JPY=jpy;rates.AUD=aud;saveCacheToStorage();setStatus("Kurser gemt ✓","ok");renderAmount();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+async function fetchLiveRates(){
+  setStatus("Henter dagens kurser…","sync",true);
+  try{
+    const [j,a]=await Promise.all([
+      fetch("https://api.frankfurter.app/latest?from=JPY&to=DKK").then(r=>r.json()),
+      fetch("https://api.frankfurter.app/latest?from=AUD&to=DKK").then(r=>r.json())
+    ]);
+    const jpy=j&&j.rates&&j.rates.DKK,aud=a&&a.rates&&a.rates.DKK;
+    if(!(jpy>0)||!(aud>0))throw new Error("Uventet svar fra kurstjeneste");
+    $("s-jpy").value=jpy.toFixed(4);$("s-aud").value=aud.toFixed(3);
+    setStatus('Kurser hentet — tjek og tryk "Gem kurser"',"ok",true);
+  }catch(err){setStatus("Kunne ikke hente kurser: "+(err.message||err),"err",true);}
+}
+
+/* --- Budget-redigering --- */
+function openBudget(kode,ev){
+  if(ev)ev.stopPropagation();
+  const c=cats.find(x=>x.kode===kode);if(!c)return;
+  editingKode=kode;
+  $("budget-title").textContent=icon(kode)+" "+label(kode);
+  $("b-jakob").value=Number(c.budget_jakob)||0;
+  $("b-frida").value=Number(c.budget_frida)||0;
+  $("budget").classList.add("show");
+  const sheet=document.querySelector("#budget .sheet");
+  sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
+}
+function closeBudget(){$("budget").classList.remove("show");editingKode=null;}
+async function saveBudget(){
+  const bj=parseFloat($("b-jakob").value),bf=parseFloat($("b-frida").value);
+  if(!(bj>=0)||!(bf>=0)){setStatus("Budget skal være 0 eller mere","err");return;}
+  setStatus("Gemmer budget…","sync",true);
+  try{
+    const data=await api("/categories?kode=eq."+encodeURIComponent(editingKode),
+      {method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({budget_jakob:bj,budget_frida:bf})});
+    const i=cats.findIndex(c=>c.kode===editingKode);
+    if(i>=0&&data&&data[0])cats[i]=data[0];
+    saveCacheToStorage();closeBudget();setStatus("Budget gemt ✓","ok");haptic(10);
+    fillKodeDropdown();render();
+  }catch(err){setStatus("Kunne ikke gemme budget: "+(err.message||err),"err",true);}
+}
+
+/* --- Huskeliste --- */
+function renderChecklist(){
+  const el=$("checklist");if(!el)return;
+  if(!checklist.length){el.innerHTML='<div class="muted" style="font-size:13px">Ingen punkter endnu.</div>';return;}
+  const sorted=checklist.slice().sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  el.innerHTML=sorted.map(item=>
+    '<div class="cl-row" data-id="'+item.id+'">'+
+      '<div class="cl-main" onclick="toggleChecklistItem(\''+item.id+'\')">'+
+        '<span class="cl-check" aria-hidden="true">'+(item.done?"✅":"⬜")+'</span>'+
+        '<span class="cl-text'+(item.done?" done":"")+'">'+esc(item.tekst||"")+'</span>'+
+        (item.hvem?'<span class="cl-who">· '+esc(item.hvem)+'</span>':"")+
+      '</div>'+
+      '<button class="del" onclick="delChecklistItem(\''+item.id+'\',event)" aria-label="Slet punkt">×</button>'+
+    '</div>').join("");
+}
+async function addChecklistItem(){
+  const inp=$("cl-input"),t=inp.value.trim();
+  if(!t){setStatus("Skriv et punkt først","err");return;}
+  if(!navigator.onLine){setStatus("Ingen forbindelse – prøv igen når du er online","err",true);return;}
+  setStatus("Tilføjer…","sync",true);
+  try{
+    const data=await api("/checklist",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({tekst:t,hvem:who,done:false})});
+    checklist.unshift(data[0]);inp.value="";saveCacheToStorage();setStatus("Tilføjet ✓","ok");haptic(10);renderChecklist();
+  }catch(err){setStatus("Fejl: "+(err.message||err),"err",true);}
+}
+async function toggleChecklistItem(id){
+  const item=checklist.find(x=>x.id===id);if(!item)return;
+  const newDone=!item.done;
+  item.done=newDone;renderChecklist();haptic(8);
+  try{
+    await api("/checklist?id=eq."+id,{method:"PATCH",body:JSON.stringify({done:newDone})});
+    saveCacheToStorage();
+  }catch(err){item.done=!newDone;renderChecklist();setStatus("Kunne ikke opdatere: "+(err.message||err),"err",true);}
+}
+async function delChecklistItem(id,ev){
+  if(ev)ev.stopPropagation();
+  try{
+    await api("/checklist?id=eq."+id,{method:"DELETE"});
+    checklist=checklist.filter(x=>x.id!==id);saveCacheToStorage();haptic(10);renderChecklist();
+  }catch(err){setStatus("Kunne ikke slette: "+(err.message||err),"err",true);}
+}
+
+/* --- Perioder & dagsbudget --- */
+function dayStr(d){const x=new Date(d);return x.toISOString().slice(0,10);}
+function computePeriodTotals(view){
+  const todayStr=dayStr(new Date());
+  const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
+  const weekStr=dayStr(weekAgo);
+  let today=0,week=0;
+  rows.forEach(r=>{
+    if(pendingDeletes.has(r.id)||!r.dato)return;
+    if(view!=="Begge"&&r.hvem!==view)return;
+    const amt=Number(r.belob_dkk||0);
+    if(r.dato===todayStr)today+=amt;
+    if(r.dato>=weekStr&&r.dato<=todayStr)week+=amt;
+  });
+  return {today,week};
+}
+function dayBudget(){
+  const t=tripInfo();
+  const budget=totalBudget("Begge"),spent=totalSpent("Begge");
+  if(t.toAf>0)return {plan:budget/t.days,spentToday:computePeriodTotals("Begge").today,daysLeft:t.days,notStarted:true};
+  const daysLeft=Math.max(1,Math.min(t.days,t.toHj+1));
+  const plan=t.toHj<0?budget/t.days:Math.max(0,budget-spent)/daysLeft;
+  return {plan:plan,spentToday:computePeriodTotals("Begge").today,daysLeft:daysLeft,notStarted:false};
+}
+function renderDayHero(){
+  const d=dayBudget();
+  const left=d.plan-d.spentToday;
+  const pct=d.plan>0?Math.min(1,d.spentToday/d.plan):0;
+  const C=2*Math.PI*38;
+  const ring=$("day-ring");
+  if(ring)ring.setAttribute("stroke-dasharray",(pct*C).toFixed(1)+" "+((1-pct)*C).toFixed(1));
+  $("day-label").textContent=d.notStarted?"Budget pr. dag på rejsen":"Tilbage i dag";
+  $("day-left").textContent=kr(d.notStarted?d.plan:left);
+  $("day-sub").textContent=d.notStarted
+    ? kr(totalBudget("Begge"))+" fordelt på "+d.daysLeft+" dage"
+    : kr(d.spentToday)+" af "+kr(d.plan)+" brugt";
+}
+
+/* --- Ugerapport --- */
+function renderWeek(){
+  const el=$("week-chart");if(!el)return;
+  const names=["man","tir","ons","tor","fre","lør","søn"];
+  const today=new Date();today.setHours(0,0,0,0);
+  const dow=(today.getDay()+6)%7;
+  const monday=new Date(today.getTime()-dow*DAY);
+  const byDay={};
+  rows.forEach(r=>{if(!pendingDeletes.has(r.id)&&r.dato)byDay[r.dato]=(byDay[r.dato]||0)+Number(r.belob_dkk||0);});
+  const vals=[];for(let i=0;i<7;i++)vals.push(byDay[dayStr(new Date(monday.getTime()+i*DAY))]||0);
+  const plan=dayBudget().plan;
+  const max=Math.max(plan,...vals,1);
+  el.innerHTML=vals.map((v,i)=>{
+    const h=Math.max(v>0?4:3,Math.round(v/max*100));
+    const cls=i===dow?"today":(plan>0&&v>plan?"over":"");
+    return '<div class="col"><div class="b '+cls+'" style="height:'+h+'%"></div><div class="lb'+(i===dow?" now":"")+'">'+names[i]+'</div></div>';
+  }).join("");
+  const sum=vals.reduce((a,b)=>a+b,0);
+  const planWeek=plan*(dow+1);
+  const diff=sum-planWeek;
+  const week=Math.ceil((((monday-new Date(monday.getFullYear(),0,1))/DAY)+new Date(monday.getFullYear(),0,1).getDay())/7);
+  $("week-label").textContent="Uge "+week;
+  $("week-sum").innerHTML=
+    '<div class="frow"><span class="l">Brugt i denne uge</span><span class="v">'+kr(sum)+'</span></div>'+
+    '<div class="frow"><span class="l">Mod planlagt ('+kr(planWeek)+')</span><span class="v '+(diff>0?"over":"under")+'">'+
+      (diff>0?"+ ":"− ")+kr(Math.abs(diff))+'</span></div>';
+}
+
+/* --- Indsigt, prognose, donut --- */
+function renderInsight(){
+  const el=$("insight");if(!el)return;
+  const byDay={};
+  rows.forEach(r=>{if(!pendingDeletes.has(r.id)&&r.dato)byDay[r.dato]=(byDay[r.dato]||0)+Number(r.belob_dkk||0);});
+  const dayEntries=Object.entries(byDay).sort((a,b)=>b[1]-a[1]);
+  let dayHtml='<div class="frow"><span class="l">Dyreste dag</span><span class="v muted">Ingen data endnu</span></div>';
+  if(dayEntries.length){
+    const [d,amt]=dayEntries[0];
+    dayHtml='<div class="frow"><span class="l">Dyreste dag ('+d+')</span><span class="v">'+kr(amt)+'</span></div>';
+  }
+  const spent=spentByView("Begge");
+  const catEntries=Object.entries(spent).sort((a,b)=>b[1]-a[1]);
+  let catHtml='<div class="frow"><span class="l">Størst kategori</span><span class="v muted">Ingen data endnu</span></div>';
+  if(catEntries.length){
+    const [kode,amt]=catEntries[0];
+    const total=catEntries.reduce((a,[,v])=>a+v,0);
+    const pct=total?Math.round(amt/total*100):0;
+    catHtml='<div class="frow"><span class="l">Størst kategori</span><span class="v">'+icon(kode)+' '+esc(label(kode))+' · '+kr(amt)+' ('+pct+'%)</span></div>';
+  }
+  el.innerHTML=dayHtml+catHtml;
+}
+function renderForecast(){
+  const el=$("forecast");if(!el)return;
+  const budget=totalBudget("Begge"),spent=totalSpent("Begge"),t=tripInfo();
+  let html='<div class="frow"><span class="l">Planlagt budget/dag</span><span class="v">'+kr(budget/t.days)+'</span></div>';
+  if(t.elapsed<1)html+='<div class="frow"><span class="l">Status</span><span class="v muted">Rejsen er ikke startet endnu</span></div>';
+  else if(spent<=0)html+='<div class="frow"><span class="l">Status</span><span class="v muted">Ingen udgifter registreret endnu</span></div>';
+  else{
+    const daysSoFar=Math.min(t.elapsed,t.days);
+    const actualDaily=spent/daysSoFar;
+    const projected=actualDaily*t.days;
+    const diff=projected-budget;
+    const cls=diff>0?"over":"under";
+    html+='<div class="frow"><span class="l">Jeres faktiske forbrug/dag</span><span class="v">'+kr(actualDaily)+'</span></div>';
+    html+='<div class="frow"><span class="l">Forventet total ved rejsens slut</span><span class="v '+cls+'">'+kr(projected)+'</span></div>';
+    html+='<div class="frow"><span class="l">'+(diff>0?"Over budget med":"Under budget med")+'</span><span class="v '+cls+'">'+kr(Math.abs(diff))+'</span></div>';
+  }
+  el.innerHTML=html;
+}
+function renderDonut(){
+  const el=$("donut");if(!el)return;
+  const spent=spentByView("Begge"),bySek={};
+  cats.forEach(c=>{const v=spent[c.kode]||0;if(v>0)bySek[c.sektion]=(bySek[c.sektion]||0)+v;});
+  const total=Object.values(bySek).reduce((a,b)=>a+b,0);
+  if(!total){el.innerHTML='<div class="muted" style="font-size:13px">Ingen udgifter endnu.</div>';return;}
+  const R=52,CX=64,CY=64,C=2*Math.PI*R;
+  let offset=0,segs="",legend="";
+  Object.keys(bySek).sort((a,b)=>bySek[b]-bySek[a]).forEach(sek=>{
+    const val=bySek[sek],frac=val/total,len=frac*C;
+    const color=SEKTION_COLOR[sek]||"#64798c";
+    segs+='<circle class="donut-seg" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="16" '+
+      'stroke-dasharray="'+len.toFixed(1)+' '+(C-len).toFixed(1)+'" stroke-dashoffset="'+(-offset).toFixed(1)+'" transform="rotate(-90 '+CX+' '+CY+')"/>';
+    offset+=len;
+    legend+='<div class="li"><span class="dot" style="background:'+color+'"></span>'+esc(sek)+' · '+kr(val)+' ('+Math.round(frac*100)+'%)</div>';
+  });
+  el.innerHTML='<div class="donut-wrap">'+
+    '<svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Fordeling af forbrug pr. rejsedel">'+
+      '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#e7eef5" stroke-width="16"/>'+segs+
+    '</svg><div class="donut-legend">'+legend+'</div></div>';
+}
+
+/* --- Talanimation --- */
+function animateNumber(el,to){
+  if(!el)return;
+  const prev=Number(el.dataset.val||0);
+  el.dataset.val=to;
+  if(reducedMotion()||prev===to){el.textContent=kr(to);return;}
+  const dur=500,start=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-start)/dur);
+    const eased=1-Math.pow(1-t,3);
+    el.textContent=kr(prev+(to-prev)*eased);
+    if(t<1)requestAnimationFrame(step);else el.textContent=kr(to);
+  }
+  requestAnimationFrame(step);
+}
+
+/* --- Swipe-til-slet --- */
+function makeSwipeable(rowEl,id){
+  let startX=0,startY=0,dx=0,dragging=false,decided=false,isHoriz=false,hapticFired=false;
+  rowEl.addEventListener("pointerdown",e=>{
+    if(e.target.closest(".del"))return;
+    dragging=true;decided=false;isHoriz=false;dx=0;hapticFired=false;
+    startX=e.clientX;startY=e.clientY;
+    try{rowEl.setPointerCapture(e.pointerId);}catch(err){}
+    rowEl.style.transition="none";
+  });
+  rowEl.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    const ddx=e.clientX-startX,ddy=e.clientY-startY;
+    if(!decided){
+      if(Math.abs(ddx)>8||Math.abs(ddy)>8){decided=true;isHoriz=Math.abs(ddx)>Math.abs(ddy);}
+      else return;
+    }
+    if(!isHoriz)return;
+    dx=Math.min(0,ddx);
+    if(dx<-90&&!hapticFired){hapticFired=true;haptic(10);}
+    if(dx>-90)hapticFired=false;
+    rowEl.style.transform="translateX("+dx+"px)";
+    rowEl.style.opacity=String(Math.max(.25,1+dx/200));
+  });
+  function end(){
+    if(!dragging)return;dragging=false;
+    if(!isHoriz){rowEl.style.transform="";rowEl.style.opacity="";return;}
+    justSwiped=true;setTimeout(()=>{justSwiped=false;},300);
+    rowEl.style.transition="transform 220ms var(--ease-out-cubic),opacity 220ms var(--ease-out-cubic)";
+    if(dx<-90){
+      rowEl.style.transform="translateX(-120%)";rowEl.style.opacity="0";
+      setTimeout(()=>delExpense(id),180);
+    }else{rowEl.style.transform="translateX(0)";rowEl.style.opacity="1";}
+  }
+  rowEl.addEventListener("pointerup",end);
+  rowEl.addEventListener("pointercancel",end);
+}
+
+/* --- Drilldown --- */
+function openDrill(kode){
+  const view=kasserView;
+  const list=rows.filter(r=>!pendingDeletes.has(r.id)&&r.kode===kode&&(view==="Begge"||r.hvem===view))
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const c=cats.find(x=>x.kode===kode);
+  const bud=c?budgetOfView(c,view):0;
+  const sp=list.reduce((a,r)=>a+Number(r.belob_dkk||0),0);
+  const pct=bud?Math.min(sp/bud*100,100):0;
+  const cls=sp>bud?"over":(sp>bud*0.85?"warn":"");
+  const t=tripInfo();
+  const daysLeft=Math.max(1,Math.min(t.days,t.toHj+1));
+  $("drill-title").textContent=icon(kode)+" "+label(kode);
+  $("drill-head").innerHTML=
+    '<div class="muted" style="font-size:13px">'+kr(sp)+' af '+kr(bud)+' · '+Math.round(bud?sp/bud*100:0)+' %</div>'+
+    '<div class="bar '+cls+'" style="margin:8px 0 6px"><span style="width:'+pct+'%"></span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:10px" class="muted">'+
+      '<span>'+kr(Math.max(0,bud-sp))+' tilbage</span>'+
+      '<span>≈ '+kr(Math.max(0,bud-sp)/daysLeft)+'/dag resten af rejsen</span></div>'+
+    '<button class="btn ghost" style="margin-bottom:6px" onclick="closeDrill();openBudget(\''+kode+'\')">✏️ Ret budget</button>';
+  if(!list.length){
+    $("drill-list").innerHTML='<div class="muted" style="font-size:13px">Ingen udgifter i denne kategori endnu.</div>';
+  }else{
+    $("drill-list").innerHTML=list.map(r=>{
+      const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
+      const pendingTag=r._pending?' <span class="muted">· ⏳ afventer sync</span>':"";
+      return '<div class="logrow"><div class="main"><div class="t">'+(view==="Begge"?"["+esc(r.hvem)+"] ":"")+
+        esc(r.beskrivelse||label(r.kode))+'</div><div class="d">'+(r.dato||"")+orig+pendingTag+
+        '</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div></div>';
+    }).join("")+'<div class="tot"><span>I alt</span><span>'+kr(sp)+'</span></div>';
+  }
+  $("drill").classList.add("show");
+  const sheet=document.querySelector("#drill .sheet");
+  sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
+}
+function closeDrill(){$("drill").classList.remove("show");}
+
+/* --- Rendering --- */
+function logRowHtml(r,i,entering,showWho){
+  const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
+  const pendingTag=r._pending?' · ⏳ afventer sync':"";
+  const delay=entering?(Math.min(i,10)*30):0;
+  return '<div class="logrow'+(entering?" row-in":"")+'" data-id="'+r.id+'" style="animation-delay:'+delay+'ms">'+
+    '<span class="ic-box">'+icon(r.kode)+'</span>'+
+    '<div class="main" onclick="mainTap(\''+r.id+'\')"><div class="t">'+esc(r.beskrivelse||label(r.kode))+'</div>'+
+    '<div class="d">'+esc(label(r.kode))+(showWho?" · "+esc(r.hvem):"")+orig+pendingTag+'</div></div>'+
+    '<div class="amt">'+kr(r.belob_dkk||0)+'</div>'+
+    '<button class="del" onclick="delExpense(\''+r.id+'\',event)" aria-label="Slet udgift">×</button></div>';
+}
+function dateHeading(d){
+  const today=dayStr(new Date());
+  const y=dayStr(new Date(Date.now()-DAY));
+  if(d===today)return "I dag · "+new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
+  if(d===y)return "I går · "+new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
+  return new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
+}
+function render(){
+  if(!loaded)return;
+  const entering=justEnteredTab;justEnteredTab=false;
+  renderCountdown();
+
+  if(tab==="hjem"){
+    renderDayHero();
+    const pt=computePeriodTotals("Begge");
+    animateNumber($("h-week"),pt.week);
+    animateNumber($("h-par"),totalSpent("Begge"));
+    animateNumber($("h-rest"),Math.max(0,totalBudget("Begge")-totalSpent("Begge")));
+    const recent=rows.filter(r=>!pendingDeletes.has(r.id)).slice(0,4);
+    $("recent").innerHTML=recent.length
+      ? recent.map((r,i)=>logRowHtml(r,i,entering,true)).join("")
+      : '<div class="muted" style="font-size:13px">Ingen udgifter endnu — tryk på + for at tilføje.</div>';
+    $("recent").querySelectorAll(".logrow").forEach(el=>makeSwipeable(el,el.dataset.id));
+  }
+
+  if(tab==="kasser"){
+    const list=catsForView(kasserView),spent=spentByView(kasserView);
+    let totB=0,totS=0,html="",lastSek="",i=0,open=false;
+    const bySek={};
+    list.forEach(c=>{
+      const bud=budgetOfView(c,kasserView),sp=spent[c.kode]||0,pct=bud?Math.min(sp/bud*100,100):0;
+      const cls=sp>bud?"over":(sp>bud*0.85?"warn":"");
+      const badge=sp>bud?'<span class="badge over">OVER</span>':(sp>bud*0.85?'<span class="badge warn">TÆT PÅ</span>':"");
+      totB+=bud;totS+=sp;
+      bySek[c.sektion]=(bySek[c.sektion]||0)+sp;
+      if(c.sektion!==lastSek){
+        if(open)html+='</div>';
+        html+='<div class="card"><div class="sekhd">'+esc(c.sektion)+'</div>';
+        lastSek=c.sektion;open=true;
+      }
+      const delay=entering?(Math.min(i,10)*30):0;i++;
+      html+='<div class="kasse'+(entering?" row-in":"")+'" style="animation-delay:'+delay+'ms" onclick="openDrill(\''+c.kode+'\')">'+
+        '<span class="ic-box">'+icon(c.kode)+'</span><div class="body">'+
+        '<div class="top"><span>'+esc(c.label)+badge+'</span><span class="amt">'+kr(sp)+' <span class="muted">/ '+kr(bud)+'</span></span></div>'+
+        '<div class="bar '+cls+'"><span style="width:'+pct+'%"></span></div></div>'+
+        '<button class="edit-ic" onclick="openBudget(\''+c.kode+'\',event)" aria-label="Ret budget">✏️</button></div>';
+    });
+    if(open)html+='</div>';
+    $("kasser").innerHTML=html+'<div class="card"><div class="tot" style="border-top:none;padding-top:0;margin-top:0">'+
+      '<span>Rejse + shopping i alt</span><span>'+kr(totS)+' / '+kr(totB)+'</span></div></div>';
+    $("k-spent").textContent=kr(totS);$("k-budget").textContent=kr(totB);
+    $("k-pct").textContent=(totB?Math.round(totS/totB*100):0)+" % brugt";
+    $("k-stack").innerHTML=Object.keys(bySek).map(s=>
+      '<span style="width:'+(totB?Math.min(100,bySek[s]/totB*100):0)+'%;background:'+(SEKTION_COLOR[s]||"#64798c")+'"></span>').join("");
+    $("k-legend").innerHTML=Object.keys(bySek).map(s=>
+      '<span class="li"><span class="dot" style="background:'+(SEKTION_COLOR[s]||"#64798c")+'"></span>'+esc(s)+'</span>').join("");
+  }
+
+  if(tab==="log"){
+    let mine=rows.filter(r=>!pendingDeletes.has(r.id)&&(logView==="Begge"||r.hvem===who));
+    if(searchQuery){
+      const q=searchQuery;
+      mine=mine.filter(r=>((r.beskrivelse||"")+" "+label(r.kode)).toLowerCase().includes(q));
+    }
+    if(!mine.length){
+      $("log").innerHTML='<div class="muted" style="font-size:13px">'+(searchQuery?"Ingen udgifter matcher søgningen.":"Ingen udgifter endnu.")+'</div>';
+      return;
+    }
+    const groups={};
+    mine.forEach(r=>{const d=r.dato||"";(groups[d]=groups[d]||[]).push(r);});
+    let i=0,html="";
+    Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
+      const sum=groups[d].reduce((a,r)=>a+Number(r.belob_dkk||0),0);
+      html+='<div><div class="daghd"><span class="d">'+esc(dateHeading(d))+'</span><span class="s">'+kr(sum)+'</span></div>'+
+        '<div class="daycard">'+groups[d].map(r=>logRowHtml(r,i++,entering,logView==="Begge")).join("")+'</div></div>';
+    });
+    $("log").innerHTML=html;
+    $("log").querySelectorAll(".logrow").forEach(el=>makeSwipeable(el,el.dataset.id));
+  }
+
+  if(tab==="mere"){
+    const sj=Object.values(spentByKode("Jakob")).reduce((a,b)=>a+b,0);
+    const sf=Object.values(spentByKode("Frida")).reduce((a,b)=>a+b,0);
+    animateNumber($("ov-jakob"),sj);
+    animateNumber($("ov-frida"),sf);
+    animateNumber($("ov-par"),sj+sf);
+    renderWeek();
+    renderForecast();
+    renderDonut();
+    renderInsight();
+    renderChecklist();
+  }
+}
+
+/* --- Eksport --- */
+function exportCSV(){
+  const head="Dato;Beskrivelse;Kode;Beløb;Valuta;DKK;Hvem";
+  const lines=rows.slice().reverse().map(r=>[r.dato,(r.beskrivelse||"").replace(/;/g,","),r.kode,r.belob,r.valuta,r.belob_dkk,r.hvem].join(";"));
+  const csv=[head].concat(lines).join("\n");
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(csv).then(()=>setStatus("Kopieret ✓ – indsæt i Excel","ok"),()=>prompt("Kopiér manuelt:",csv));
+  }else prompt("Kopiér manuelt:",csv);
+}
+
+/* --- Lyttere & opstart --- */
+$("e-valuta").addEventListener("change",updatePreviewEdit);
+$("log-search").addEventListener("input",e=>{searchQuery=e.target.value.trim().toLowerCase();render();});
+window.addEventListener("online",()=>{setStatus("Online igen – opdaterer…","sync",true);flushPendingQueue().then(()=>loadAll());});
+window.addEventListener("offline",()=>setStatus("Offline – nye udgifter gemmes lokalt og synces automatisk","err",true));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&loaded){flushPendingQueue();loadAll(true);}});
+window.addEventListener("resize",()=>{
+  if($("app").style.display!=="block")return;
+  initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));
+  initIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+logView+'"]'));
+  initIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));
+  initIndicator($("cur-seg"),document.querySelector('#cur-seg button[data-v="'+addCurrency+'"]'));
+});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+}
+pollTimer=setInterval(()=>{
+  if(loaded&&!document.hidden&&!$("modal").classList.contains("show")){
+    flushPendingQueue();loadAll(true);
+  }
+},45000);
+try{const w=localStorage.getItem(WHO_KEY);if(w==="Jakob"||w==="Frida"){who=w;kasserView=w;}}catch(e){}
+renderCountdown();
+const hadCache=loadCacheFromStorage();
+if(hadCache)mergePendingIntoRows();
+loadAll(hadCache);
+if(navigator.onLine)flushPendingQueue();
+if(new URLSearchParams(location.search).get("who")||localStorage.getItem(WHO_KEY))enterApp();
+</script>
+</body>
+</html>
