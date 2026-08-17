@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Rejsebudget – Jakob &amp; Frida</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,10 +13,10 @@
 <meta name="apple-mobile-web-app-title" content="Rejsebudget">
 <style>
   :root{
-    --bg:#f6f9fc; --card:#ffffff; --card2:#eaf2fb; --line:#d7e3ee; --ink:#152a3d;
-    --muted:#64798c; --accent:#2563eb; --accent2:#4f8ff7; --good:#16a34a; --good2:#34c766;
-    --warn:#d97706; --bad:#dc2626;
-    --good-text:#15803d; --bad-text:#b91c1c; --warn-text:#b45309; --accent-text:#1d4ed8;
+    --bg:#faf9f6; --card:#ffffff; --card2:#f2f0ea; --line:#e3e0d8; --ink:#17160f;
+    --muted:#8a8a82; --accent:#c8102e; --good:#3f6b4f;
+    --warn:#a67c2e; --bad:#8b2e2e;
+    --good-text:#2f5233; --bad-text:#7a1f1f; --warn-text:#8a6318; --accent-text:#a10d24;
     --nav-h:86px;
     --ease-out-quint: cubic-bezier(.23,1,.32,1);
     --ease-out-cubic: cubic-bezier(.33,1,.68,1);
@@ -38,25 +38,25 @@
   /* --- Topbar --- */
   .topbar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px}
-  .topbar h1{font-family:"Times New Roman",Times,serif;font-size:19px;font-weight:400;margin:0;letter-spacing:.2px}
+  .topbar h1{font-size:18px;font-weight:600;margin:0;letter-spacing:-.3px}
   .pill{display:inline-block;background:var(--card2);border:1px solid var(--line);color:var(--muted);
     font-size:11px;padding:4px 9px;border-radius:999px;white-space:nowrap}
-  .avatar{width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
-  .pane-wrap{padding:14px 16px calc(var(--nav-h) + 16px);display:flex;flex-direction:column;gap:12px}
+  .avatar{width:28px;height:28px;border-radius:999px;background:var(--ink);
+    color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+  .pane-wrap{padding:16px 16px calc(var(--nav-h) + 20px);display:flex;flex-direction:column;gap:16px}
   .pane{animation:paneIn 220ms var(--ease-out-quint)}
   @keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
   /* --- Kort --- */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;
-    box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 6px 16px rgba(21,42,61,.06)}
-  .hd{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
-    margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:17px;
+    box-shadow:0 1px 2px rgba(23,22,15,.04)}
+  .hd{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;
+    margin:0 0 13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
   .hd .link{font-size:12px;font-weight:600;color:var(--accent);text-transform:none;letter-spacing:0;
     background:none;border:none;cursor:pointer;padding:0}
   label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
-  input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
-    background:#fbfdff;color:var(--ink);font-size:16px;transition:border-color 150ms var(--ease-out-cubic)}
+  input,select{width:100%;padding:12px;border-radius:6px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:16px;transition:border-color 150ms var(--ease-out-cubic)}
   input:focus,select:focus{outline:none;border-color:var(--accent)}
   .row{display:flex;gap:8px}
   .row>*{flex:1}
@@ -66,11 +66,11 @@
   .refresh:active{transform:scale(.97)}
 
   /* --- Knapper --- */
-  .btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;color:#fff;
+  .btn{width:100%;padding:14px;border:none;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;color:#fff;
     transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic)}
-  .btn.good{background:linear-gradient(135deg,var(--good),var(--good2))}
-  .btn.accent{background:linear-gradient(135deg,var(--accent),var(--accent2))}
-  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .btn.good{background:var(--good)}
+  .btn.accent{background:var(--ink)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
   .btn:active{opacity:.85;transform:scale(.99)} .btn:disabled{opacity:.5}
   .btn.morph-btn{position:relative;overflow:hidden;height:50px;margin:0 auto;padding:0;
     transition:transform 100ms var(--ease-out-cubic),opacity 150ms var(--ease-out-cubic),
@@ -96,13 +96,13 @@
   .seg button.active{color:#fff}
   .seg button:active{transform:scale(.97)}
   .seg .ind{position:absolute;top:3px;bottom:3px;left:3px;border-radius:999px;z-index:0;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 2px 8px rgba(37,99,235,.25);
+    background:var(--accent);box-shadow:0 2px 8px rgba(200,16,46,.25);
     transition:transform 320ms var(--ease-spring),width 320ms var(--ease-spring)}
   .seg.sm button{font-size:12px;padding:7px 4px}
 
   /* --- Bundnavigation --- */
   .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
-    box-shadow:0 -8px 24px rgba(21,42,61,.08);max-width:640px;margin:0 auto;
+    max-width:640px;margin:0 auto;
     padding:8px 8px calc(14px + env(safe-area-inset-bottom,0px));
     display:flex;align-items:flex-end;justify-content:space-around}
   .nav button{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;
@@ -112,44 +112,44 @@
   .nav button.active{color:var(--accent)}
   .nav button:active{transform:scale(.97)}
   .nav button.fab{flex:none!important;width:60px;height:60px;border-radius:999px;border:none;padding:0;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:30px;line-height:1;
+    background:var(--accent);color:#fff;font-size:30px;line-height:1;
     display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0 4px 4px;
-    box-shadow:0 10px 22px rgba(37,99,235,.35);transition:transform 120ms var(--ease-spring)}
+    box-shadow:0 10px 20px rgba(200,16,46,.3);transition:transform 120ms var(--ease-spring)}
   .nav button.fab:active{transform:scale(.94)}
 
   /* --- Dagsbudget-hero --- */
-  .hero{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;padding:16px;color:#fff;
-    box-shadow:0 10px 24px rgba(37,99,235,.22);display:flex;align-items:center;gap:16px}
-  .hero .l{font-size:12px;opacity:.85}
-  .hero .v{font-size:32px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .hero{background:var(--ink);border-radius:8px;padding:18px;color:#fff;
+    display:flex;align-items:center;gap:16px}
+  .hero .l{font-size:12px;opacity:.7}
+  .hero .v{font-size:32px;font-weight:300;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
   .ring-fg{transition:stroke-dasharray 700ms var(--ease-out-quint)}
-  .totals-grid{display:flex;gap:8px}
-  .totbox{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
+  .totals-grid{display:flex;gap:10px}
+  .totbox{flex:1;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:13px;text-align:center}
   .totbox .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-  .totbox .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .totbox .l{font-size:12px;color:var(--muted);margin-top:3px}
   .totbox.tint{background:var(--card2);border-color:transparent}
 
   /* --- Kategorier / kasser --- */
   .sekhd{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px}
-  .kasse{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;
+  .kasse{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;
     transition:background 150ms var(--ease-out-cubic)}
   .kasse:last-child{border-bottom:none}
   .kasse:hover{background:var(--card2)}
-  .ic-box{width:34px;height:34px;border-radius:9px;background:var(--card2);display:flex;align-items:center;
-    justify-content:center;font-size:17px;flex:none}
+  .ic-box{width:34px;height:34px;border-radius:8px;background:transparent;border:1px solid var(--line);display:flex;align-items:center;
+    justify-content:center;font-size:16px;flex:none}
   .kasse .body{flex:1;min-width:0}
   .kasse .top{display:flex;justify-content:space-between;gap:8px;font-size:14px}
   .kasse .amt{font-variant-numeric:tabular-nums;white-space:nowrap}
-  .bar{height:6px;background:#e7eef5;border-radius:3px;margin-top:6px;overflow:hidden}
+  .bar{height:4px;background:var(--card2);border-radius:2px;margin-top:6px;overflow:hidden}
   .bar>span{display:block;height:100%;background:var(--good);transition:width 420ms var(--ease-spring)}
   .bar.warn>span{background:var(--warn)} .bar.over>span{background:var(--bad)}
   .badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:999px;margin-left:4px;white-space:nowrap}
-  .badge.warn{background:rgba(217,119,6,.12);color:var(--warn-text)}
-  .badge.over{background:rgba(220,38,38,.1);color:var(--bad-text)}
+  .badge.warn{background:rgba(166,124,46,.14);color:var(--warn-text)}
+  .badge.over{background:rgba(139,46,46,.12);color:var(--bad-text)}
   .edit-ic{color:var(--muted);font-size:14px;flex:none;background:none;border:none;cursor:pointer;padding:4px}
   .tot{display:flex;justify-content:space-between;font-weight:700;font-size:16px;
     padding-top:12px;margin-top:8px;border-top:2px solid var(--line)}
-  .stackbar{height:8px;background:#e7eef5;border-radius:4px;overflow:hidden;display:flex;margin-top:8px}
+  .stackbar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;display:flex;margin-top:8px}
   .stackbar>span{display:block;height:100%}
   .legend{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
   .legend .li{display:flex;align-items:center;gap:5px}
@@ -159,14 +159,14 @@
   .daghd{display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 6px}
   .daghd .d{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .daghd .s{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-  .daycard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;
-    box-shadow:0 6px 16px rgba(21,42,61,.06);overflow:hidden}
-  .logrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);
+  .daycard{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 14px;
+    box-shadow:0 1px 2px rgba(23,22,15,.04);overflow:hidden}
+  .logrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);
     font-size:14px;touch-action:pan-y;will-change:transform;background:var(--card)}
   .logrow:last-child{border-bottom:none}
   .logrow .main{flex:1;min-width:0;cursor:pointer}
   .logrow .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .logrow .d{color:var(--muted);font-size:11px;margin-top:2px}
+  .logrow .d{color:var(--muted);font-size:12px;margin-top:3px}
   .logrow .amt{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
   .del{background:none;border:none;color:var(--bad);font-size:22px;padding:0 6px;cursor:pointer;line-height:1;
     transition:transform 100ms var(--ease-out-cubic)}
@@ -177,12 +177,12 @@
   /* --- Ugerapport --- */
   .week{display:flex;align-items:flex-end;gap:8px;height:84px}
   .week .col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
-  .week .b{width:100%;background:var(--card2);border-radius:5px 5px 0 0;transition:height 480ms var(--ease-out-quint)}
-  .week .b.today{background:linear-gradient(180deg,var(--accent2),var(--accent))}
+  .week .b{width:100%;background:var(--card2);border-radius:3px 3px 0 0;transition:height 480ms var(--ease-out-quint)}
+  .week .b.today{background:var(--accent)}
   .week .b.over{background:var(--bad)}
   .week .lb{font-size:10px;color:var(--muted)}
   .week .lb.now{color:var(--ink);font-weight:700}
-  .frow{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--line);gap:8px}
+  .frow{display:flex;justify-content:space-between;padding:10px 0;font-size:13px;border-bottom:1px solid var(--line);gap:8px}
   .frow:last-child{border-bottom:none}
   .frow .l{color:var(--muted)}
   .frow .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
@@ -194,12 +194,12 @@
   .donut-seg{transition:stroke-dashoffset 700ms var(--ease-out-quint)}
 
   /* --- Liste-rækker (Mere) --- */
-  .listrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;
+  .listrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;
     border-bottom:1px solid var(--line);font-size:14px;background:none;border-left:none;border-right:none;
     border-top:none;width:100%;text-align:left;color:var(--ink);cursor:pointer}
   .listrow:last-child{border-bottom:none}
   .listrow .r{color:var(--muted);font-size:13px;white-space:nowrap}
-  .cl-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);gap:8px}
+  .cl-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);gap:8px}
   .cl-row:last-child{border-bottom:none}
   .cl-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer}
   .cl-check{font-size:18px;flex:none;transition:transform 150ms var(--ease-spring)}
@@ -212,16 +212,16 @@
   .status{font-size:12px;text-align:center;padding:7px;border-radius:8px;max-height:0;overflow:hidden;opacity:0;
     transition:max-height 200ms var(--ease-out-quint),opacity 200ms var(--ease-out-quint),margin 200ms var(--ease-out-quint)}
   .status.show{max-height:60px;opacity:1}
-  .status.ok{background:rgba(22,163,74,.1);color:var(--good-text)}
-  .status.err{background:rgba(220,38,38,.1);color:var(--bad-text)}
-  .status.sync{background:rgba(37,99,235,.1);color:var(--accent-text)}
-  .skel{height:14px;background:linear-gradient(90deg,#eef2f6,#e2e9f0,#eef2f6);background-size:200% 100%;
+  .status.ok{background:rgba(63,107,79,.1);color:var(--good-text)}
+  .status.err{background:rgba(139,46,46,.1);color:var(--bad-text)}
+  .status.sync{background:var(--card2);color:var(--muted)}
+  .skel{height:14px;background:linear-gradient(90deg,#f0efe9,#e7e5dd,#f0efe9);background-size:200% 100%;
     animation:sh 1.2s infinite;border-radius:4px;margin:10px 0}
   @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
   .toasts{position:fixed;left:0;right:0;bottom:calc(var(--nav-h) + 8px);display:flex;flex-direction:column;
     align-items:center;gap:8px;z-index:60;pointer-events:none;padding:0 16px}
-  .toast{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;
-    display:flex;align-items:center;gap:10px;max-width:520px;width:100%;box-shadow:0 12px 28px rgba(21,42,61,.18);
+  .toast{pointer-events:auto;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px 14px;
+    display:flex;align-items:center;gap:10px;max-width:520px;width:100%;box-shadow:0 8px 20px rgba(23,22,15,.12);
     animation:toastIn 220ms var(--ease-out-quint);overflow:hidden;position:relative;color:var(--ink)}
   .toast.out{animation:toastOut 160ms var(--ease-in-cubic) forwards}
   .toast .txt{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -238,22 +238,22 @@
   }
 
   /* --- Startskærm --- */
-  #splash{position:fixed;inset:0;background:linear-gradient(160deg,#ffffff,#eaf2fb 55%,#eafaf1);
+  #splash{position:fixed;inset:0;background:var(--bg);
     display:flex;align-items:center;justify-content:center;z-index:100;padding:28px;
     transition:opacity 380ms var(--ease-out-cubic),transform 380ms var(--ease-out-cubic)}
   #splash.leaving{opacity:0;transform:scale(1.03);pointer-events:none}
   .splash-inner{max-width:420px;width:100%;text-align:center}
-  .splash-title{font-family:"Times New Roman",Times,serif;font-size:46px;margin:0 0 10px;color:var(--ink);
-    letter-spacing:.3px;font-weight:400}
+  .splash-title{font-size:44px;margin:0 0 10px;color:var(--ink);
+    letter-spacing:-1.5px;font-weight:300}
+  .splash-accent{width:36px;height:3px;background:var(--accent);margin:0 auto 18px;border-radius:2px}
   .splash-sub{color:var(--muted);font-size:14px}
   .splash-pill{display:inline-block;background:#fff;border:1px solid var(--line);color:var(--muted);
     font-size:12px;padding:6px 12px;border-radius:999px;margin-top:18px;white-space:nowrap}
   .splash-who{margin-top:38px;display:flex;flex-direction:column;gap:10px}
   .who-btns{display:flex;gap:10px}
-  .who-btns button{flex:1;padding:16px 0;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;
+  .who-btns button{flex:1;padding:16px 0;border-radius:6px;font-size:16px;font-weight:600;cursor:pointer;
     border:1px solid var(--line);background:#fff;color:var(--muted);transition:transform 100ms var(--ease-out-cubic)}
-  .who-btns button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
-    box-shadow:0 8px 20px rgba(37,99,235,.25)}
+  .who-btns button.primary{border:none;color:#fff;background:var(--ink)}
   .who-btns button:active{transform:scale(.97)}
 
   /* --- Fuldskærms tilføj / sheets --- */
@@ -261,22 +261,22 @@
     flex-direction:column;overflow-y:auto}
   .screen.show{display:flex;animation:paneIn 220ms var(--ease-out-quint)}
   .amount{text-align:center;padding:4px 0 0}
-  .amount .v{font-size:44px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .amount .v{font-size:44px;font-weight:300;letter-spacing:-1px;font-variant-numeric:tabular-nums}
   .amount .cur{color:var(--muted);font-size:22px;font-weight:600;margin-left:6px}
   .amount .sub{color:var(--muted);font-size:13px;margin-top:2px}
   .amount .expr{color:var(--accent);font-size:12px;margin-top:6px;min-height:15px}
   .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
   .chip{background:#fff;border:1px solid var(--line);color:var(--ink);font-size:13px;padding:9px 13px;
     border-radius:999px;white-space:nowrap;cursor:pointer;transition:transform 100ms var(--ease-out-cubic)}
-  .chip.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;font-weight:600}
+  .chip.active{background:var(--accent);color:#fff;border-color:transparent;font-weight:600}
   .chip:active{transform:scale(.97)}
-  .modal{position:fixed;inset:0;background-color:rgba(15,25,35,0);visibility:hidden;opacity:0;
+  .modal{position:fixed;inset:0;background-color:rgba(23,22,15,0);visibility:hidden;opacity:0;
     display:flex;align-items:flex-end;justify-content:center;z-index:50;
     transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 200ms}
-  .modal.show{visibility:visible;opacity:1;background-color:rgba(15,25,35,.45);
+  .modal.show{visibility:visible;opacity:1;background-color:rgba(23,22,15,.45);
     transition:opacity 200ms var(--ease-out-cubic),background-color 200ms var(--ease-out-cubic),visibility 0s linear 0s}
-  .sheet{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 0 0;padding:18px;width:100%;
-    max-width:640px;max-height:82vh;overflow-y:auto;box-shadow:0 -8px 30px rgba(21,42,61,.16)}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:12px 12px 0 0;padding:18px;width:100%;
+    max-width:640px;max-height:82vh;overflow-y:auto;box-shadow:0 -8px 24px rgba(23,22,15,.1)}
   .sheet.anim{animation:up 220ms var(--ease-spring)}
   @keyframes up{from{transform:translateY(40px)}to{transform:translateY(0)}}
   .grabber{width:44px;height:4px;border-radius:999px;background:var(--line);margin:0 auto 14px}
@@ -284,16 +284,16 @@
   .amt-wrap input{cursor:pointer;padding-right:34px}
   .amt-wrap .amt-icon{position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;
     font-size:15px;opacity:.55}
-  .calc{background:var(--card);border-top:1px solid var(--line);border-radius:16px 16px 0 0;
-    box-shadow:0 -10px 30px rgba(21,42,61,.16);padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+  .calc{background:var(--card);border-top:1px solid var(--line);border-radius:12px 12px 0 0;
+    box-shadow:0 -8px 24px rgba(23,22,15,.1);padding:12px 16px calc(16px + env(safe-area-inset-bottom,0px))}
   .calc-fixed{position:fixed;left:0;right:0;bottom:0;z-index:55;max-width:640px;margin:0 auto;
     transform:translateY(105%);transition:transform 260ms var(--ease-out-quint)}
   .calc-fixed.open{transform:translateY(0)}
   .calc-toprow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
   .calc-ops{display:flex;gap:6px;flex:1}
-  .calc-btn{padding:15px 0;border:none;border-radius:10px;background:var(--card2);color:var(--ink);
+  .calc-btn{padding:15px 0;border:none;border-radius:6px;background:var(--card2);color:var(--ink);
     font-size:20px;font-weight:600;cursor:pointer;transition:transform 100ms var(--ease-out-cubic),background 150ms}
-  .calc-btn:active{transform:scale(.95);background:#dbe6f2}
+  .calc-btn:active{transform:scale(.95);background:#e8e5db}
   .calc-btn.op{flex:1;color:var(--accent);font-weight:700;font-size:18px;padding:11px 0}
   .calc-btn.back{color:var(--bad-text);font-size:18px}
   .calc-clear{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;
@@ -303,11 +303,6 @@
   /* --- Kvittering-scan --- */
   .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .mini-seg{display:flex;gap:6px;margin-top:4px}
-  .mini-seg button{flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--line);background:#fbfdff;color:var(--muted);
-    font-size:12px;font-weight:600;cursor:pointer;transition:transform 100ms var(--ease-out-cubic)}
-  .mini-seg button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
-  .mini-seg button:active{transform:scale(.96)}
 </style>
 </head>
 <body>
@@ -315,6 +310,7 @@
 <div id="splash">
   <div class="splash-inner">
     <h1 class="splash-title">Rejsebudget</h1>
+    <div class="splash-accent"></div>
     <div class="splash-sub">Japan &amp; Australien 2026 · Jakob &amp; Frida</div>
     <div class="splash-pill" id="splash-countdown"></div>
     <div class="splash-who">
@@ -398,79 +394,88 @@
 
   <!-- ---------- MERE ---------- -->
   <div id="tab-mere" class="pane-wrap" style="display:none">
-    <div class="card">
-      <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
-      <div class="totals-grid">
-        <div class="totbox tint"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
-        <div class="totbox tint"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
-        <div class="totbox tint"><div class="v" id="ov-par">–</div><div class="l">Jer to</div></div>
-      </div>
+    <div class="seg" id="mere-seg">
+      <div class="ind"></div>
+      <button type="button" data-v="indsigt" class="active" onclick="setMereView('indsigt')">Indsigt</button>
+      <button type="button" data-v="indstillinger" onclick="setMereView('indstillinger')">Indstillinger</button>
     </div>
-    <div class="card">
-      <div class="hd">Balance</div>
-      <div id="balance-line" style="font-size:15px;font-weight:600">–</div>
-      <div class="muted" style="font-size:12px;margin-top:4px">Beregnet ud fra scannede kvitteringer hvor en af jer har lagt ud for den anden.</div>
-    </div>
-    <div class="card">
-      <div class="hd"><span>Ugerapport</span><span class="muted" id="week-label" style="text-transform:none;letter-spacing:0;font-weight:600"></span></div>
-      <div class="week" id="week-chart"></div>
-      <div id="week-sum" style="margin-top:8px"></div>
-    </div>
-    <div class="card">
-      <div class="hd">Forbrugsprognose</div>
-      <div id="forecast"></div>
-    </div>
-    <div class="card">
-      <div class="hd">Hvor går pengene hen</div>
-      <div id="donut"></div>
-    </div>
-    <div class="card">
-      <div class="hd">Indsigt</div>
-      <div id="insight"></div>
-    </div>
-    <div class="card">
-      <div class="hd">Indkøbs- &amp; huskeliste</div>
-      <div class="row" style="align-items:flex-end">
-        <div style="flex:3">
-          <input id="cl-input" placeholder="Tilføj punkt…" maxlength="140" aria-label="Nyt punkt til liste"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}">
+    <div id="mere-indsigt" style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="hd"><span>Samlet overblik</span><button class="refresh" onclick="loadAll(true)">Opdatér</button></div>
+        <div class="totals-grid">
+          <div class="totbox tint"><div class="v" id="ov-jakob">–</div><div class="l">Jakob brugt</div></div>
+          <div class="totbox tint"><div class="v" id="ov-frida">–</div><div class="l">Frida brugt</div></div>
+          <div class="totbox tint"><div class="v" id="ov-par">–</div><div class="l">Jer to</div></div>
         </div>
-        <div style="flex:1"><button class="btn accent" style="padding:12px 0" onclick="addChecklistItem()">Tilføj</button></div>
       </div>
-      <div id="checklist" style="margin-top:10px"></div>
-    </div>
-    <div class="card">
-      <div class="hd">Dig</div>
-      <div class="seg" id="who-seg">
-        <div class="ind"></div>
-        <button type="button" data-v="Jakob" onclick="setWho('Jakob')">Jakob</button>
-        <button type="button" data-v="Frida" onclick="setWho('Frida')">Frida</button>
+      <div class="card">
+        <div class="hd">Balance</div>
+        <div id="balance-line" style="font-size:15px;font-weight:600">–</div>
+        <div class="muted" style="font-size:12px;margin-top:4px">Beregnet ud fra scannede kvitteringer hvor en af jer har lagt ud for den anden.</div>
       </div>
-      <div class="muted" style="font-size:12px;margin-top:8px">Nye udgifter registreres på den valgte person.</div>
-    </div>
-    <div class="card">
-      <div class="hd">Rejsedatoer</div>
-      <div class="muted" style="font-size:13px">Bruges til nedtælling, dagsbudget og prognose. Gemmes lokalt på denne enhed.</div>
-      <div class="row">
-        <div><label>Afrejse</label><input id="s-afrejse" type="date"></div>
-        <div><label>Hjemme</label><input id="s-hjem" type="date"></div>
+      <div class="card">
+        <div class="hd"><span>Ugerapport</span><span class="muted" id="week-label" style="text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+        <div class="week" id="week-chart"></div>
+        <div id="week-sum" style="margin-top:8px"></div>
       </div>
-      <button class="btn accent" style="margin-top:12px" onclick="saveTripDatesFromInputs()">Gem datoer</button>
-    </div>
-    <div class="card">
-      <div class="hd">Valutakurser</div>
-      <div class="muted" style="font-size:13px">Bruges på nye udgifter. Tidligere udgifter beholder deres kurs.</div>
-      <div class="row">
-        <div><label>1 JPY = kr</label><input id="s-jpy" type="number" step="any" min="0"></div>
-        <div><label>1 AUD = kr</label><input id="s-aud" type="number" step="any" min="0"></div>
+      <div class="card">
+        <div class="hd">Forbrugsprognose</div>
+        <div id="forecast"></div>
       </div>
-      <button class="btn ghost" style="margin-top:10px" onclick="fetchLiveRates()">Hent dagens kurser</button>
-      <button class="btn accent" style="margin-top:8px" onclick="saveRates()">Gem kurser</button>
+      <div class="card">
+        <div class="hd">Hvor går pengene hen</div>
+        <div id="donut"></div>
+      </div>
+      <div class="card">
+        <div class="hd">Indsigt</div>
+        <div id="insight"></div>
+      </div>
     </div>
-    <div class="card">
-      <div class="hd">Eksportér</div>
-      <div class="muted" style="font-size:13px">Kopiér alle udgifter som CSV til Excel-arkets Forbrugslog-fane.</div>
-      <button class="btn ghost" style="margin-top:10px" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
+    <div id="mere-indstillinger" style="display:none;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="hd">Indkøbs- &amp; huskeliste</div>
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:3">
+            <input id="cl-input" placeholder="Tilføj punkt…" maxlength="140" aria-label="Nyt punkt til liste"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}">
+          </div>
+          <div style="flex:1"><button class="btn accent" style="padding:12px 0" onclick="addChecklistItem()">Tilføj</button></div>
+        </div>
+        <div id="checklist" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="hd">Dig</div>
+        <div class="seg" id="who-seg">
+          <div class="ind"></div>
+          <button type="button" data-v="Jakob" onclick="setWho('Jakob')">Jakob</button>
+          <button type="button" data-v="Frida" onclick="setWho('Frida')">Frida</button>
+        </div>
+        <div class="muted" style="font-size:12px;margin-top:8px">Nye udgifter registreres på den valgte person.</div>
+      </div>
+      <div class="card">
+        <div class="hd">Rejsedatoer</div>
+        <div class="muted" style="font-size:13px">Bruges til nedtælling, dagsbudget og prognose. Gemmes lokalt på denne enhed.</div>
+        <div class="row">
+          <div><label>Afrejse</label><input id="s-afrejse" type="date"></div>
+          <div><label>Hjemme</label><input id="s-hjem" type="date"></div>
+        </div>
+        <button class="btn accent" style="margin-top:12px" onclick="saveTripDatesFromInputs()">Gem datoer</button>
+      </div>
+      <div class="card">
+        <div class="hd">Valutakurser</div>
+        <div class="muted" style="font-size:13px">Bruges på nye udgifter. Tidligere udgifter beholder deres kurs.</div>
+        <div class="row">
+          <div><label>1 JPY = kr</label><input id="s-jpy" type="number" step="any" min="0"></div>
+          <div><label>1 AUD = kr</label><input id="s-aud" type="number" step="any" min="0"></div>
+        </div>
+        <button class="btn ghost" style="margin-top:10px" onclick="fetchLiveRates()">Hent dagens kurser</button>
+        <button class="btn accent" style="margin-top:8px" onclick="saveRates()">Gem kurser</button>
+      </div>
+      <div class="card">
+        <div class="hd">Eksportér</div>
+        <div class="muted" style="font-size:13px">Kopiér alle udgifter som CSV til Excel-arkets Forbrugslog-fane.</div>
+        <button class="btn ghost" style="margin-top:10px" onclick="exportCSV()">Kopiér til Excel (CSV)</button>
+      </div>
     </div>
   </div>
 
@@ -656,13 +661,13 @@ const ICONS={"Hotel JP":"🏨","Mad JP":"🍜","Splurge JP":"🍶","Shinkansen":
   "Bil":"🚙","Braendstof":"⛽","Parkering":"🅿️","Airbnb":"🏡","Hotel AU":"🏨","Mad camper":"🍳","Mad by AU":"🍽️",
   "Fly AU":"✈️","Rev":"🤿","Aktiviteter AU":"🎡","Transport AU":"🚌","Objektiv":"📷","Toj":"👕","Shopping":"🛍️"};
 function icon(kode){return ICONS[kode]||"💰";}
-const SEKTION_COLOR={"Japan":"#2563eb","Australien":"#16a34a","Shopping":"#d97706"};
+const SEKTION_COLOR={"Japan":"#c8102e","Australien":"#b8763a","Shopping":"#8a8a82"};
 const CACHE_KEY="rejsebudget_cache_v2";
 const TRIP_KEY="rejsebudget_trip_dates";
 const PENDING_KEY="rejsebudget_pending_queue";
 const WHO_KEY="rejsebudget_who";
 function lastKodeKey(w){return "rejsebudget_last_kode_"+w;}
-let who="Jakob",tab="hjem",kasserView="Jakob",logView="Mine",searchQuery="",justEnteredTab=true,justSwiped=false;
+let who="Jakob",tab="hjem",kasserView="Jakob",logView="Mine",mereView="indsigt",searchQuery="",justEnteredTab=true,justSwiped=false;
 let cats=[],rows=[],rates={DKK:1,JPY:0.043,AUD:4.40},checklist=[];
 let editingId=null,editingKode=null,addKode=null,addCurrency="DKK",loaded=false,pollTimer=null;
 let receiptState=null;
@@ -834,7 +839,7 @@ function compressImage(file,maxDim,quality){
     reader.readAsDataURL(file);
   });
 }
-function blankReceiptItem(){return {description:"",amount:0,owedBy:null,kode:null};}
+function blankReceiptItem(){return {description:"",original:"",amount:0,owedBy:null,kode:null};}
 async function handleReceiptFile(file){
   if(!file)return;
   $("receipt-file").value="";
@@ -860,7 +865,11 @@ async function handleReceiptFile(file){
     receiptState.currency=["DKK","JPY","AUD"].includes(data.currency)?data.currency:"DKK";
     receiptState.total=Number(data.total)||0;
     receiptState.items=(Array.isArray(data.items)?data.items:[]).map(it=>({
-      description:it.description||"",amount:Number(it.amount)||0,owedBy:null,kode:null}));
+      description:it.description||"",
+      original:(it.original&&it.original!==it.description)?it.original:"",
+      amount:Number(it.amount)||0,
+      owedBy:it.likely_shared?"Begge":null,
+      kode:(it.suggested_kode&&cats.some(c=>c.kode===it.suggested_kode))?it.suggested_kode:null}));
     if(!receiptState.items.length){
       receiptState.error="Fandt ingen enkeltvarer på kvitteringen — tilføj dem manuelt.";
       receiptState.items=[blankReceiptItem()];
@@ -912,9 +921,10 @@ function receiptItemHtml(it,i){
       '<div style="flex:3"><label>Beskrivelse</label><input value="'+esc(it.description)+'" maxlength="120" placeholder="Fx Ramen" oninput="updateReceiptItem('+i+',\'description\',this.value)"></div>'+
       '<div style="flex:1"><label>Beløb</label><input type="number" step="0.01" min="0" value="'+(it.amount||"")+'" oninput="updateReceiptItem('+i+',\'amount\',this.value)"></div>'+
     '</div>'+
+    (it.original?'<div class="muted" style="font-size:11px;margin-top:4px">Original: '+esc(it.original)+'</div>':"")+
     '<label style="margin-top:8px">Hvem</label>'+
-    '<div class="mini-seg">'+["Jakob","Begge","Frida"].map(w=>
-      '<button type="button" class="'+(it.owedBy===w?"active":"")+'" onclick="setReceiptItemOwed('+i+',\''+w+'\')">'+w+'</button>').join("")+
+    '<div class="seg sm" id="item-seg-'+i+'"><div class="ind"></div>'+["Jakob","Begge","Frida"].map(w=>
+      '<button type="button" data-v="'+w+'" class="'+(it.owedBy===w?"active":"")+'" onclick="setReceiptItemOwed('+i+',\''+w+'\')">'+w+'</button>').join("")+
     '</div>'+
     '<label style="margin-top:8px">Kategori</label>'+
     '<div class="chips">'+(chips||'<span class="muted" style="font-size:12px">Ingen kategorier for '+esc(scope)+'</span>')+'</div>'+
@@ -943,6 +953,9 @@ function renderReceiptScreen(){
       ["Jakob","Frida"].map(w=>'<button type="button" data-v="'+w+'" class="'+(s.paidBy===w?"active":"")+'" onclick="setReceiptPaidBy(\''+w+'\')">'+w+'</button>').join("")+
     '</div>'+
   '</div>';
+  if(s.items.some(it=>it.kode||it.owedBy==="Begge")){
+    html+='<div class="muted" style="font-size:12px">Kategori og "Hvem" er foreslået ud fra kvitteringen — tryk for at ændre.</div>';
+  }
   html+=s.items.map((it,i)=>receiptItemHtml(it,i)).join("");
   html+='<button type="button" class="btn ghost" onclick="addReceiptItem()">+ Tilføj punkt</button>';
   html+='<div class="card" id="receipt-settlement"></div>';
@@ -951,6 +964,10 @@ function renderReceiptScreen(){
   el.innerHTML=html;
   initIndicator($("receipt-cur-seg"),document.querySelector('#receipt-cur-seg button[data-v="'+s.currency+'"]'));
   initIndicator($("receipt-paid-seg"),document.querySelector('#receipt-paid-seg button[data-v="'+s.paidBy+'"]'));
+  s.items.forEach((it,i)=>{
+    if(!it.owedBy)return;
+    initIndicator($("item-seg-"+i),document.querySelector('#item-seg-'+i+' button[data-v="'+it.owedBy+'"]'));
+  });
   renderReceiptSummary();
 }
 function renderReceiptSummary(){
@@ -1104,6 +1121,14 @@ function setLogView(v){
   moveIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+v+'"]'));
   justEnteredTab=true;render();
 }
+function setMereView(v){
+  mereView=v;
+  document.querySelectorAll("#mere-seg button").forEach(b=>b.classList.toggle("active",b.dataset.v===v));
+  moveIndicator($("mere-seg"),document.querySelector('#mere-seg button[data-v="'+v+'"]'));
+  $("mere-indsigt").style.display=v==="indsigt"?"flex":"none";
+  $("mere-indstillinger").style.display=v==="indstillinger"?"flex":"none";
+  window.scrollTo(0,0);
+}
 const TAB_TITLE={hjem:"Rejsebudget",kasser:"Kasser",log:"Log",mere:"Mere"};
 function setTab(t){
   tab=t;justEnteredTab=true;
@@ -1117,7 +1142,10 @@ function setTab(t){
   window.scrollTo(0,0);
   if(t==="kasser"){syncKasserSegUI();initIndicator($("kasser-seg"),document.querySelector('#kasser-seg button[data-v="'+kasserView+'"]'));}
   if(t==="log")initIndicator($("log-seg"),document.querySelector('#log-seg button[data-v="'+logView+'"]'));
-  if(t==="mere"){syncWhoUI();initIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));}
+  if(t==="mere"){
+    syncWhoUI();initIndicator($("who-seg"),document.querySelector('#who-seg button[data-v="'+who+'"]'));
+    initIndicator($("mere-seg"),document.querySelector('#mere-seg button[data-v="'+mereView+'"]'));
+  }
   render();
 }
 
@@ -1228,7 +1256,7 @@ async function loadAll(silent){
 function confettiBurst(originEl){
   if(reducedMotion()||!originEl)return;
   const rect=originEl.getBoundingClientRect();
-  const colors=["#2563eb","#4f8ff7","#16a34a","#34c766","#0ea5e9"];
+  const colors=["#c8102e","#c9a227","#17160f","#b8763a"];
   for(let i=0;i<16;i++){
     const p=document.createElement("div");
     p.className="confetti";
@@ -1580,7 +1608,7 @@ function renderDonut(){
   let offset=0,segs="",legend="";
   Object.keys(bySek).sort((a,b)=>bySek[b]-bySek[a]).forEach(sek=>{
     const val=bySek[sek],frac=val/total,len=frac*C;
-    const color=SEKTION_COLOR[sek]||"#64798c";
+    const color=SEKTION_COLOR[sek]||"#8a8a82";
     segs+='<circle class="donut-seg" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="'+color+'" stroke-width="16" '+
       'stroke-dasharray="'+len.toFixed(1)+' '+(C-len).toFixed(1)+'" stroke-dashoffset="'+(-offset).toFixed(1)+'" transform="rotate(-90 '+CX+' '+CY+')"/>';
     offset+=len;
@@ -1588,7 +1616,7 @@ function renderDonut(){
   });
   el.innerHTML='<div class="donut-wrap">'+
     '<svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Fordeling af forbrug pr. rejsedel">'+
-      '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#e7eef5" stroke-width="16"/>'+segs+
+      '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#e3e0d8" stroke-width="16"/>'+segs+
     '</svg><div class="donut-legend">'+legend+'</div></div>';
 }
 
@@ -1748,9 +1776,9 @@ function render(){
     $("k-spent").textContent=kr(totS);$("k-budget").textContent=kr(totB);
     $("k-pct").textContent=(totB?Math.round(totS/totB*100):0)+" % brugt";
     $("k-stack").innerHTML=Object.keys(bySek).map(s=>
-      '<span style="width:'+(totB?Math.min(100,bySek[s]/totB*100):0)+'%;background:'+(SEKTION_COLOR[s]||"#64798c")+'"></span>').join("");
+      '<span style="width:'+(totB?Math.min(100,bySek[s]/totB*100):0)+'%;background:'+(SEKTION_COLOR[s]||"#8a8a82")+'"></span>').join("");
     $("k-legend").innerHTML=Object.keys(bySek).map(s=>
-      '<span class="li"><span class="dot" style="background:'+(SEKTION_COLOR[s]||"#64798c")+'"></span>'+esc(s)+'</span>').join("");
+      '<span class="li"><span class="dot" style="background:'+(SEKTION_COLOR[s]||"#8a8a82")+'"></span>'+esc(s)+'</span>').join("");
   }
 
   if(tab==="log"){
