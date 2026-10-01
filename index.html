@@ -562,6 +562,7 @@
   <div class="sheet">
     <div class="grabber"></div>
     <div class="hd"><span id="modal-title">Ret udgift</span><button class="refresh" style="color:var(--bad)" onclick="delFromEdit()">Slet</button></div>
+    <div id="e-stamp" class="muted" style="font-size:12px;margin:-4px 0 4px"></div>
     <label>Beskrivelse</label>
     <input id="e-besk" maxlength="120">
     <div class="row">
@@ -1006,7 +1007,7 @@ async function saveReceipt(){
   const valid=s.items.filter(it=>it.amount>0&&it.owedBy&&it.kode);
   if(!valid.length)return;
   const btn=$("receipt-save-btn");btn.disabled=true;
-  const dato=new Date().toISOString().slice(0,10);
+  const dato=dayStr(new Date());
   const desc=s.merchant?s.merchant.trim():"";
   const recs=[];
   valid.forEach(it=>{
@@ -1281,7 +1282,7 @@ async function addExpense(){
   const belob=getCalcValue("add"),val=addCurrency,kode=addKode;
   if(!(belob>0)){setStatus("Skriv et beløb større end 0","err");haptic(20);return;}
   if(!kode){setStatus("Vælg en kategori","err");return;}
-  const rec={dato:new Date().toISOString().slice(0,10),beskrivelse:$("f-besk").value.trim()||null,
+  const rec={dato:dayStr(new Date()),beskrivelse:$("f-besk").value.trim()||null,
     kode:kode,belob:belob,valuta:val,rate_used:rates[val],hvem:who};
   try{localStorage.setItem(lastKodeKey(who),kode);}catch(e){}
   const btn=$("add-btn");
@@ -1330,6 +1331,7 @@ function openEdit(id){
   $("e-kode").innerHTML=cats.slice().sort((a,b)=>a.sort_order-b.sort_order)
     .map(c=>'<option value="'+c.kode+'">'+icon(c.kode)+' '+esc(c.label)+'</option>').join("");
   $("e-kode").value=r.kode;
+  $("e-stamp").textContent=stampText(r);
   $("modal").classList.add("show");
   const sheet=document.querySelector("#modal .sheet");
   sheet.classList.remove("anim");void sheet.offsetWidth;sheet.classList.add("anim");
@@ -1339,6 +1341,13 @@ function mainTap(id){
   const r=rows.find(x=>x.id===id);
   if(r&&r._pending){setStatus("Venter på forbindelse — kan rettes når den er synkroniseret","err");return;}
   openEdit(id);
+}
+function stampText(r){
+  if(!r.created_at)return "";
+  const fmt=iso=>new Date(iso).toLocaleDateString("da-DK",{weekday:"short",day:"numeric",month:"short"})+" kl. "+timeStr(iso);
+  let t="Tilføjet "+fmt(r.created_at);
+  if(r.updated_at&&Math.abs(new Date(r.updated_at)-new Date(r.created_at))>60000)t+=" · rettet "+fmt(r.updated_at);
+  return t;
 }
 function closeModal(){$("modal").classList.remove("show");editingId=null;closeCalc();}
 function delFromEdit(){const id=editingId;closeModal();if(id)delExpense(id);}
@@ -1493,7 +1502,9 @@ async function delChecklistItem(id,ev){
 }
 
 /* --- Perioder & dagsbudget --- */
-function dayStr(d){const x=new Date(d);return x.toISOString().slice(0,10);}
+/* Lokal dato (telefonens tidszone) som YYYY-MM-DD — ikke UTC */
+function dayStr(d){const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 function computePeriodTotals(view){
   const todayStr=dayStr(new Date());
   const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
@@ -1536,10 +1547,10 @@ function renderWeek(){
   const names=["man","tir","ons","tor","fre","lør","søn"];
   const today=new Date();today.setHours(0,0,0,0);
   const dow=(today.getDay()+6)%7;
-  const monday=new Date(today.getTime()-dow*DAY);
+  const monday=addDays(today,-dow);
   const byDay={};
   rows.forEach(r=>{if(!pendingDeletes.has(r.id)&&r.dato)byDay[r.dato]=(byDay[r.dato]||0)+Number(r.belob_dkk||0);});
-  const vals=[];for(let i=0;i<7;i++)vals.push(byDay[dayStr(new Date(monday.getTime()+i*DAY))]||0);
+  const vals=[];for(let i=0;i<7;i++)vals.push(byDay[dayStr(addDays(monday,i))]||0);
   const plan=dayBudget().plan;
   const max=Math.max(plan,...vals,1);
   el.innerHTML=vals.map((v,i)=>{
@@ -1701,7 +1712,7 @@ function openDrill(kode){
       const orig=r.valuta==="DKK"?"":" · "+r.belob+" "+r.valuta;
       const pendingTag=r._pending?' <span class="muted">· ⏳ afventer sync</span>':"";
       return '<div class="logrow"><div class="main"><div class="t">'+(view==="Begge"?"["+esc(r.hvem)+"] ":"")+
-        esc(r.beskrivelse||label(r.kode))+'</div><div class="d">'+(r.dato||"")+orig+pendingTag+
+        esc(r.beskrivelse||label(r.kode))+'</div><div class="d">'+(r.dato||"")+(r.created_at?" kl. "+timeStr(r.created_at):"")+orig+pendingTag+
         '</div></div><div class="amt">'+kr(r.belob_dkk||0)+'</div></div>';
     }).join("")+'<div class="tot"><span>I alt</span><span>'+kr(sp)+'</span></div>';
   }
@@ -1719,13 +1730,18 @@ function logRowHtml(r,i,entering,showWho){
   return '<div class="logrow'+(entering?" row-in":"")+'" data-id="'+r.id+'" style="animation-delay:'+delay+'ms">'+
     '<span class="ic-box">'+icon(r.kode)+'</span>'+
     '<div class="main" onclick="mainTap(\''+r.id+'\')"><div class="t">'+esc(r.beskrivelse||label(r.kode))+'</div>'+
-    '<div class="d">'+esc(label(r.kode))+(showWho?" · "+esc(r.hvem):"")+orig+pendingTag+'</div></div>'+
+    '<div class="d">'+(r.created_at?timeStr(r.created_at)+" · ":"")+esc(label(r.kode))+(showWho?" · "+esc(r.hvem):"")+orig+pendingTag+'</div></div>'+
     '<div class="amt">'+kr(r.belob_dkk||0)+'</div>'+
     '<button class="del" onclick="delExpense(\''+r.id+'\',event)" aria-label="Slet udgift">×</button></div>';
 }
+function timeStr(iso){
+  if(!iso)return "";
+  const d=new Date(iso);if(isNaN(d))return "";
+  return d.toLocaleTimeString("da-DK",{hour:"2-digit",minute:"2-digit"}).replace(".",":");
+}
 function dateHeading(d){
   const today=dayStr(new Date());
-  const y=dayStr(new Date(Date.now()-DAY));
+  const y=dayStr(addDays(new Date(),-1));
   if(d===today)return "I dag · "+new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
   if(d===y)return "I går · "+new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
   return new Date(d+"T00:00:00").toLocaleDateString("da-DK",{weekday:"long",day:"numeric",month:"short"});
