@@ -124,6 +124,12 @@
   .hero .v{font-size:32px;font-weight:300;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
   .ring-fg{transition:stroke-dasharray 700ms var(--ease-out-quint)}
   .hero{flex-wrap:wrap}
+  .hero-carry{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    padding:10px 12px;border-radius:6px;background:rgba(255,255,255,.08);font-size:13px}
+  .hero-carry[hidden]{display:none}
+  .hero-carry span:first-child{opacity:.75}
+  .hero-carry .cv{font-weight:700;font-variant-numeric:tabular-nums;color:#9fe0b0}
+  .hero-carry.neg .cv{color:#f2a9a9}
   .hero-seg{width:100%;display:flex;gap:4px;padding:3px;background:rgba(255,255,255,.08);border-radius:999px}
   .hero-seg button{flex:1;border:none;background:transparent;color:rgba(255,255,255,.6);font-size:12px;font-weight:600;
     padding:7px 4px;border-radius:999px;cursor:pointer;transition:background 200ms var(--ease-out-cubic),color 200ms var(--ease-out-cubic)}
@@ -352,6 +358,10 @@
         <div class="l" id="day-label">Tilbage i dag</div>
         <div class="v" id="day-left">–</div>
         <div class="l" id="day-sub">–</div>
+      </div>
+      <div class="hero-carry" id="day-carry" hidden>
+        <span id="day-carry-l">Tilgode fra andre dage</span>
+        <span class="cv" id="day-carry-v">–</span>
       </div>
       <div class="hero-seg" id="day-seg" role="tablist" aria-label="Vis dagsbudget for">
         <button type="button" data-v="Jakob" onclick="setDayView('Jakob')">Jakob</button>
@@ -1530,14 +1540,28 @@ function computePeriodTotals(view){
   });
   return {today,week};
 }
+/* Fast dagsbudget: (budget − forbrug før afrejse) fordelt ligeligt på rejsedagene.
+   Tilgode = summen af (dagsbudget − forbrug) for alle rejsedage før i dag. */
 function dayBudget(view){
   view=view||"Begge";
   const t=tripInfo();
-  const budget=totalBudget(view),spent=totalSpent(view);
-  if(t.toAf>0)return {plan:budget/t.days,spentToday:computePeriodTotals(view).today,daysLeft:t.days,notStarted:true,budget:budget};
+  const budget=totalBudget(view);
+  const afStr=dayStr(t.afrejse),todayStr=dayStr(new Date());
+  let pre=0,today=0;const byDay={};
+  rows.forEach(r=>{
+    if(pendingDeletes.has(r.id)||!r.dato)return;
+    if(view!=="Begge"&&r.hvem!==view)return;
+    const amt=Number(r.belob_dkk||0);
+    if(r.dato<afStr)pre+=amt;else byDay[r.dato]=(byDay[r.dato]||0)+amt;
+    if(r.dato===todayStr)today+=amt;
+  });
+  const plan=Math.max(0,budget-pre)/t.days;
+  if(t.toAf>0)return {plan:plan,spentToday:today,daysLeft:t.days,notStarted:true,budget:budget-pre,carry:0,daysBefore:0};
+  const daysBefore=Math.max(0,Math.min(t.days,t.elapsed-1));
+  let carry=0;
+  for(let i=0;i<daysBefore;i++)carry+=plan-(byDay[dayStr(addDays(t.afrejse,i))]||0);
   const daysLeft=Math.max(1,Math.min(t.days,t.toHj+1));
-  const plan=t.toHj<0?budget/t.days:Math.max(0,budget-spent)/daysLeft;
-  return {plan:plan,spentToday:computePeriodTotals(view).today,daysLeft:daysLeft,notStarted:false,budget:budget};
+  return {plan:plan,spentToday:today,daysLeft:daysLeft,notStarted:false,budget:budget-pre,carry:carry,daysBefore:daysBefore};
 }
 /* Hvem dagsbudgettet vises for — huskes lokalt, ingen netværkskald */
 const DAYVIEW_KEY="rejsebudget_dayview";
@@ -1568,6 +1592,17 @@ function renderDayHero(){
   $("day-sub").textContent=d.notStarted
     ? kr(d.budget)+" fordelt på "+d.daysLeft+" dage"
     : kr(d.spentToday)+" af "+kr(d.plan)+" brugt";
+  const c=$("day-carry");
+  if(c){
+    if(d.notStarted||d.daysBefore===0){c.hidden=true;}
+    else{
+      const r=Math.round(d.carry);
+      c.hidden=false;
+      c.classList.toggle("neg",r<0);
+      $("day-carry-l").textContent=r<0?"Overforbrug fra andre dage":"Tilgode fra andre dage";
+      $("day-carry-v").textContent=(r>0?"+ ":r<0?"− ":"")+kr(Math.abs(r));
+    }
+  }
 }
 
 /* --- Ugerapport --- */
