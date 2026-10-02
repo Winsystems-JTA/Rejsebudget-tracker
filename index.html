@@ -123,6 +123,12 @@
   .hero .l{font-size:12px;opacity:.7}
   .hero .v{font-size:32px;font-weight:300;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
   .ring-fg{transition:stroke-dasharray 700ms var(--ease-out-quint)}
+  .hero{flex-wrap:wrap}
+  .hero-seg{width:100%;display:flex;gap:4px;padding:3px;background:rgba(255,255,255,.08);border-radius:999px}
+  .hero-seg button{flex:1;border:none;background:transparent;color:rgba(255,255,255,.6);font-size:12px;font-weight:600;
+    padding:7px 4px;border-radius:999px;cursor:pointer;transition:background 200ms var(--ease-out-cubic),color 200ms var(--ease-out-cubic)}
+  .hero-seg button.active{background:#fff;color:var(--ink)}
+  .hero-seg button:active{transform:scale(.97)}
   .totals-grid{display:flex;gap:10px}
   .totbox{flex:1;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:13px;text-align:center}
   .totbox .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -346,6 +352,11 @@
         <div class="l" id="day-label">Tilbage i dag</div>
         <div class="v" id="day-left">–</div>
         <div class="l" id="day-sub">–</div>
+      </div>
+      <div class="hero-seg" id="day-seg" role="tablist" aria-label="Vis dagsbudget for">
+        <button type="button" data-v="Jakob" onclick="setDayView('Jakob')">Jakob</button>
+        <button type="button" data-v="Frida" onclick="setDayView('Frida')">Frida</button>
+        <button type="button" data-v="Begge" onclick="setDayView('Begge')">Begge</button>
       </div>
     </div>
     <div class="totals-grid">
@@ -1519,25 +1530,43 @@ function computePeriodTotals(view){
   });
   return {today,week};
 }
-function dayBudget(){
+function dayBudget(view){
+  view=view||"Begge";
   const t=tripInfo();
-  const budget=totalBudget("Begge"),spent=totalSpent("Begge");
-  if(t.toAf>0)return {plan:budget/t.days,spentToday:computePeriodTotals("Begge").today,daysLeft:t.days,notStarted:true};
+  const budget=totalBudget(view),spent=totalSpent(view);
+  if(t.toAf>0)return {plan:budget/t.days,spentToday:computePeriodTotals(view).today,daysLeft:t.days,notStarted:true,budget:budget};
   const daysLeft=Math.max(1,Math.min(t.days,t.toHj+1));
   const plan=t.toHj<0?budget/t.days:Math.max(0,budget-spent)/daysLeft;
-  return {plan:plan,spentToday:computePeriodTotals("Begge").today,daysLeft:daysLeft,notStarted:false};
+  return {plan:plan,spentToday:computePeriodTotals(view).today,daysLeft:daysLeft,notStarted:false,budget:budget};
+}
+/* Hvem dagsbudgettet vises for — huskes lokalt, ingen netværkskald */
+const DAYVIEW_KEY="rejsebudget_dayview";
+let dayView=null;
+function getDayView(){
+  if(dayView)return dayView;
+  try{const v=localStorage.getItem(DAYVIEW_KEY);if(v==="Jakob"||v==="Frida"||v==="Begge")dayView=v;}catch(e){}
+  return dayView||who;
+}
+function setDayView(v){
+  dayView=v;try{localStorage.setItem(DAYVIEW_KEY,v);}catch(e){}
+  haptic&&haptic(8);renderDayHero();
 }
 function renderDayHero(){
-  const d=dayBudget();
+  const view=getDayView();
+  document.querySelectorAll("#day-seg button").forEach(b=>{
+    const on=b.dataset.v===view;b.classList.toggle("active",on);b.setAttribute("aria-selected",on?"true":"false");
+  });
+  const d=dayBudget(view);
   const left=d.plan-d.spentToday;
   const pct=d.plan>0?Math.min(1,d.spentToday/d.plan):0;
   const C=2*Math.PI*38;
   const ring=$("day-ring");
   if(ring)ring.setAttribute("stroke-dasharray",(pct*C).toFixed(1)+" "+((1-pct)*C).toFixed(1));
-  $("day-label").textContent=d.notStarted?"Budget pr. dag på rejsen":"Tilbage i dag";
+  const forWho=view==="Begge"?"jer to":view;
+  $("day-label").textContent=(d.notStarted?"Budget pr. dag på rejsen":"Tilbage i dag")+" · "+forWho;
   $("day-left").textContent=kr(d.notStarted?d.plan:left);
   $("day-sub").textContent=d.notStarted
-    ? kr(totalBudget("Begge"))+" fordelt på "+d.daysLeft+" dage"
+    ? kr(d.budget)+" fordelt på "+d.daysLeft+" dage"
     : kr(d.spentToday)+" af "+kr(d.plan)+" brugt";
 }
 
